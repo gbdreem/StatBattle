@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Higher or Lower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: StatBattle arcade, same house as Yardage Spinner.
+   IDEA: two trading cards face off on the pixel field.
+   PICTURE: the two player cards, team color band + pixel logo, big yard totals.
+   COLOUR and TYPE: NFL navy accent, team primaries on the cards, Oswald numbers.
+   LAYOUT: title bar, stat picker, the duel, footnote; cards stack under 600px. */
+:root{
+  --bg:#f3f4f7;--surface:#fff;--surface-2:#eceef2;--text:#14161a;--muted:#555c69;--border:#d5d9e0;
+  --accent:#013369;--accent-text:#fff;--focus:#c8102e;--good:#0f7a3d;--bad:#b3261e;--radius:16px;
+  --font-display:"Oswald","Arial Narrow",system-ui,sans-serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0d1015;--surface:#161a21;--surface-2:#1f252e;--text:#eef0f4;--muted:#a0a8b6;--border:#2c333e;
+  --accent:#5b9bea;--accent-text:#06121f;--focus:#ff7070;--good:#4cc27e;--bad:#ff8a80;}}
+:root[data-theme=dark]{color-scheme:dark;
+  --bg:#0d1015;--surface:#161a21;--surface-2:#1f252e;--text:#eef0f4;--muted:#a0a8b6;--border:#2c333e;
+  --accent:#5b9bea;--accent-text:#06121f;--focus:#ff7070;--good:#4cc27e;--bad:#ff8a80;}
+:root[data-theme=light]{color-scheme:light}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;min-height:100vh;color:var(--text);font:16px/1.5 var(--font-body);overflow-x:clip;
+  background:var(--bg) url("../../assets/bg/football.png") center/cover no-repeat fixed;image-rendering:pixelated}
+main{max-width:980px;margin:0 auto;padding:clamp(12px,3vw,28px);display:grid;gap:16px;image-rendering:auto}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(16px,3vw,24px)}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+h1{margin:0;font:700 clamp(30px,5vw,44px)/1.05 var(--font-display);text-transform:uppercase;letter-spacing:.01em}
+.sub{margin:4px 0 0;color:var(--muted)}
+.scores{display:flex;gap:10px}
+.score{background:var(--surface-2);border-radius:12px;padding:6px 14px;text-align:center;min-width:84px}
+.score b{display:block;font:700 28px/1.1 var(--font-display)}
+.score span{font-size:.85rem;color:var(--muted)}
+.score.bump b{animation:bump .4s ease}
+@keyframes bump{50%{transform:scale(1.25);color:var(--good)}}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.seg button{font:600 16px var(--font-body);min-height:44px;padding:0 18px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.q{margin:0;text-align:center;font:700 clamp(20px,3vw,26px)/1.2 var(--font-display);text-transform:uppercase;text-wrap:balance}
+.q small{display:block;font:400 15px var(--font-body);text-transform:none;color:var(--muted);margin-top:4px}
+.duel{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:center;margin-top:16px}
+.vs{font:700 22px var(--font-display);width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-text)}
+.card{all:unset;box-sizing:border-box;display:flex;flex-direction:column;border-radius:var(--radius);overflow:hidden;
+  background:var(--surface);border:2px solid var(--border);cursor:pointer;min-height:300px;
+  transition:transform .15s ease,border-color .2s,box-shadow .2s}
+.card:hover:not([disabled]){transform:translateY(-3px);box-shadow:0 8px 24px rgb(0 0 0/.18)}
+.card:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.card[disabled]{cursor:default}
+.card.right-pick{border-color:var(--good);box-shadow:0 0 0 3px var(--good)}
+.card.wrong-pick{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad)}
+.band{background:var(--tp);color:#fff;padding:16px;display:flex;align-items:center;gap:12px}
+.chip{flex:none;width:64px;height:64px;border-radius:14px;background:#fff;display:grid;place-items:center}
+.chip img{width:52px;height:52px;image-rendering:pixelated;object-fit:contain}
+.team{font:500 15px/1.2 var(--font-display);text-transform:uppercase;letter-spacing:.03em;text-shadow:0 1px 2px rgb(0 0 0/.4)}
+.body{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.name{font:700 clamp(24px,3.4vw,32px)/1.05 var(--font-display);text-transform:uppercase;text-wrap:balance}
+.yrs{color:var(--muted);font-size:15px}
+.num{margin-top:auto;font:700 clamp(34px,5.5vw,48px)/1 var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.num.hidden{color:var(--muted)}
+.unit{color:var(--muted);font-size:14px}
+.tap{font-size:14px;color:var(--accent);font-weight:600}
+.duel.slide .card{animation:slide .45s ease}
+@keyframes slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.over{display:none;text-align:center;margin-top:20px}
+.over.show{display:block;animation:slide .35s ease}
+.over h2{margin:0;font:700 32px/1.1 var(--font-display);text-transform:uppercase}
+.over p{margin:8px 0 0}
+.over .gap{font-weight:600;color:var(--bad)}
+.btn{font:600 17px var(--font-body);min-height:48px;padding:0 26px;margin-top:14px;border:0;border-radius:999px;
+  cursor:pointer;background:var(--accent);color:var(--accent-text)}
+.foot{font-size:13px;color:var(--muted);margin:0}
+.status{text-align:center;color:var(--muted)}
+@media (max-width:600px){
+  .duel{grid-template-columns:minmax(0,1fr)}
+  .vs{justify-self:center;width:44px;height:44px;font-size:18px;margin:-6px 0}
+  .card{min-height:0}
+  .num{margin-top:8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <header>
+      <div>
+        <h1>Higher or Lower</h1>
+        <p class="sub">Pick the player with more career yards. One miss ends the run.</p>
+      </div>
+      <div class="scores">
+        <div class="score" id="streakBox"><b id="streak">0</b><span>Streak</span></div>
+        <div class="score"><b id="best">0</b><span>Best</span></div>
+      </div>
+    </header>
+    <div class="seg" role="group" aria-label="Stat">
+      <button type="button" data-stat="rush" aria-pressed="true">Rushing</button>
+      <button type="button" data-stat="rec" aria-pressed="false">Receiving</button>
+      <button type="button" data-stat="pass" aria-pressed="false">Passing</button>
+    </div>
+  </section>
+
+  <section class="panel" aria-live="polite">
+    <p class="q" id="question">Loading players…</p>
+    <div class="duel" id="duel"></div>
+    <div class="over" id="over">
+      <h2 id="overTitle">Run over</h2>
+      <p id="overLine"></p>
+      <p class="gap" id="overGap"></p>
+      <button type="button" class="btn" id="again">Play again</button>
+    </div>
+  </section>
+
+  <p class="panel foot">Regular-season yards from 1999 through Week 10 of 2026, all positions counted.
+    A <b>*</b> after a player's first year means his stats start in 1999, so any earlier seasons aren't in his total yet.
+    Keys: ← or 1 picks the left card, → or 2 the right, Enter plays again.</p>
+</main>
+
+<script>
+{
+const TEAMS = {
+  ARI:["Cardinals","#97233F"],ATL:["Falcons","#A71930"],BAL:["Ravens","#241773"],BUF:["Bills","#00338D"],
+  CAR:["Panthers","#0085CA"],CHI:["Bears","#0B162A"],CIN:["Bengals","#FB4F14"],CLE:["Browns","#311D00"],
+  DAL:["Cowboys","#003594"],DEN:["Broncos","#FB4F14"],DET:["Lions","#0076B6"],GB:["Packers","#203731"],
+  HOU:["Texans","#03202F"],IND:["Colts","#002C5F"],JAX:["Jaguars","#101820"],KC:["Chiefs","#E31837"],
+  LAC:["Chargers","#0080C6"],LAR:["Rams","#003594"],LV:["Raiders","#000000"],MIA:["Dolphins","#008E97"],
+  MIN:["Vikings","#4F2683"],NE:["Patriots","#002244"],NO:["Saints","#D3BC8D"],NYG:["Giants","#0B2265"],
+  NYJ:["Jets","#125740"],PHI:["Eagles","#004C54"],PIT:["Steelers","#FFB612"],SEA:["Seahawks","#002244"],
+  SF:["49ers","#AA0000"],TB:["Buccaneers","#D50A0A"],TEN:["Titans","#4B92DB"],WAS:["Commanders","#5A1414"],
+};
+/* Light primaries need dark text on the band. */
+const DARK_TEXT = new Set(["NO","PIT"]);
+
+const STATS = {
+  rush:{label:"rushing", pools:[60,100,160,Infinity]},
+  rec: {label:"receiving", pools:[80,140,240,Infinity]},
+  pass:{label:"passing", pools:[32,50,75,Infinity]},
+};
+/* How close the two totals must be (bigger / smaller), tightening as the streak grows. */
+function band(streak){
+  if (streak < 3) return [1.25, 2.5];
+  if (streak < 6) return [1.12, 1.7];
+  if (streak < 10) return [1.05, 1.4];
+  return [1.01, 1.25];
+}
+function poolSize(stat, streak){
+  const p = STATS[stat].pools;
+  return p[streak < 3 ? 0 : streak < 6 ? 1 : streak < 10 ? 2 : 3];
+}
+
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => n.toLocaleString("en-US");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let DATA = null;
+const S = { stat:"rush", left:null, right:null, streak:0, used:new Set(), phase:"load" };
+
+let bests = {};
+try { bests = JSON.parse(localStorage.getItem("statbattle-hol-best") || "{}") || {}; } catch (e) { bests = {}; }
+function saveBest(){ try { localStorage.setItem("statbattle-hol-best", JSON.stringify(bests)); } catch (e) {} }
+
+const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+function pickNext(cur){
+  const list = DATA[S.stat];
+  const tries = [
+    [poolSize(S.stat, S.streak), band(S.streak)],
+    [poolSize(S.stat, S.streak + 4), [1.01, 3]],
+    [Infinity, [1.001, 100]],
+  ];
+  for (const [k, [lo, hi]] of tries) {
+    const c = list.slice(0, k).filter((p) => {
+      if (S.used.has(p.id) || p.total === cur.total) return false;
+      const r = Math.max(p.total, cur.total) / Math.min(p.total, cur.total);
+      return r >= lo && r <= hi;
+    });
+    if (c.length) return rand(c);
+  }
+  return null;
+}
+
+function newRun(){
+  S.streak = 0; S.used = new Set(); S.phase = "pick";
+  const list = DATA[S.stat];
+  S.left = rand(list.slice(0, poolSize(S.stat, 0)));
+  S.used.add(S.left.id);
+  S.right = pickNext(S.left);
+  S.used.add(S.right.id);
+  $("over").classList.remove("show");
+  render(true);
+}
+
+function cardHTML(p, side, showNum){
+  const [team, color] = TEAMS[p.team] || ["", "#013369"];
+  const txt = DARK_TEXT.has(p.team) ? "#101820" : "#fff";
+  const span = p.first === p.last ? `${p.first}${p.first === 1999 ? "*" : ""}`
+    : `${p.first}${p.first === 1999 ? "*" : ""}–${p.last}`;
+  return `<button type="button" class="card" id="card-${side}" data-side="${side}"
+      aria-label="${esc(p.name)}${showNum ? `, ${fmt(p.total)} yards` : ""}">
+    <div class="band" style="--tp:${color};color:${txt}">
+      <div class="chip"><img src="../../assets/logos/${p.team.toLowerCase()}.png" alt=""></div>
+      <div class="team" style="text-shadow:${txt === "#fff" ? "" : "none"}">Most yards with the ${esc(team)}</div>
+    </div>
+    <div class="body">
+      <div class="name">${esc(p.name)}</div>
+      <div class="yrs">${span}</div>
+      <div class="num${showNum ? "" : " hidden"}" id="num-${side}">${showNum ? fmt(p.total) : "?"}</div>
+      <div class="unit">${showNum ? `career ${STATS[S.stat].label} yards` : `<span class="tap">Tap if he had more</span>`}</div>
+    </div>
+  </button>`;
+}
+
+function render(slide){
+  const lab = STATS[S.stat].label;
+  $("question").innerHTML = `Who had more career ${lab} yards?<small>${esc(S.left.name)} has ${fmt(S.left.total)}. Pick a card.</small>`;
+  const duel = $("duel");
+  duel.innerHTML = cardHTML(S.left, "left", true) + `<div class="vs" aria-hidden="true">VS</div>` + cardHTML(S.right, "right", false);
+  // The left card is also a valid pick ("he had more"), so swap its hint.
+  duel.querySelector("#card-left .unit").innerHTML = `career ${lab} yards · <span class="tap">tap if he had more</span>`;
+  duel.classList.remove("slide");
+  if (slide) { void duel.offsetWidth; duel.classList.add("slide"); }
+  $("streak").textContent = S.streak;
+  $("best").textContent = bests[S.stat] || 0;
+}
+
+function countUp(el, to, ms){
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) { el.textContent = fmt(to); return Promise.resolve(); }
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / ms);
+      el.textContent = fmt(Math.round(to * (1 - (1 - k) ** 3)));
+      if (k < 1) requestAnimationFrame(step); else res();
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+async function choose(side){
+  if (S.phase !== "pick") return;
+  S.phase = "reveal";
+  const winner = S.right.total > S.left.total ? "right" : "left";
+  const ok = side === winner;
+  document.querySelectorAll(".card").forEach((c) => c.disabled = true);
+  const num = $("num-right");
+  num.classList.remove("hidden");
+  $("card-right").querySelector(".unit").textContent = `career ${STATS[S.stat].label} yards`;
+  await countUp(num, S.right.total, 900);
+  $("card-" + side).classList.add(ok ? "right-pick" : "wrong-pick");
+  if (!ok) $("card-" + winner).classList.add("right-pick");
+
+  if (ok) {
+    S.streak++;
+    if (S.streak > (bests[S.stat] || 0)) { bests[S.stat] = S.streak; saveBest(); }
+    $("streak").textContent = S.streak;
+    $("best").textContent = bests[S.stat] || 0;
+    const box = $("streakBox"); box.classList.remove("bump"); void box.offsetWidth; box.classList.add("bump");
+    setTimeout(() => {
+      const next = pickNext(S.right);
+      if (!next) { return endRun(true); }
+      S.left = S.right; S.right = next; S.used.add(next.id);
+      S.phase = "pick";
+      render(true);
+    }, 1100);
+  } else {
+    endRun(false);
+  }
+}
+
+function endRun(clearedAll){
+  S.phase = "over";
+  const best = bests[S.stat] || 0;
+  const diff = Math.abs(S.right.total - S.left.total);
+  $("overTitle").textContent = clearedAll ? "You ran out of players" : "Run over";
+  $("overLine").textContent = `Streak: ${S.streak}` + (S.streak > 0 && S.streak === best ? " (new best)" : ` · Best: ${best}`);
+  $("overGap").textContent = clearedAll ? "" :
+    `${S.right.total > S.left.total ? S.right.name : S.left.name} had ${fmt(diff)} more yards.`;
+  $("over").classList.add("show");
+  $("again").focus({ preventScroll: true });
+}
+
+$("duel").addEventListener("click", (e) => {
+  const c = e.target.closest(".card");
+  if (c && !c.disabled) choose(c.dataset.side);
+});
+$("again").addEventListener("click", newRun);
+document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+  if (!DATA || b.dataset.stat === S.stat && S.phase !== "over") return;
+  S.stat = b.dataset.stat;
+  document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  newRun();
+}));
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input,textarea")) return;
+  if (S.phase === "pick" && (e.key === "ArrowLeft" || e.key === "1")) choose("left");
+  else if (S.phase === "pick" && (e.key === "ArrowRight" || e.key === "2")) choose("right");
+  else if (S.phase === "over" && e.key === "Enter" && document.activeElement !== $("again")) newRun();
+});
+
+fetch("careers.json")
+  .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then((raw) => {
+    DATA = {};
+    for (const k of Object.keys(STATS)) {
+      DATA[k] = raw[k].map(([id, name, total, first, last, team]) => ({ id, name, total, first, last, team }));
+    }
+    newRun();
+  })
+  .catch((err) => {
+    $("question").innerHTML = `Couldn't load the player data.<small>${esc(err.message)}</small>`;
+  });
+}
+</script>
+</body>
+</html>

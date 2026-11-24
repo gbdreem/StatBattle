@@ -1,0 +1,26 @@
+name: Player page or rating suggestion
+description: Suggest a rating, fix a player's bio or stats, or ask for a player to be added
+labels: ["area: player-pages"]
+body:
+  - type: input
+    id: player
+    attributes:
+      label: Player
+      description: Name, or the page address (e.g. #p-tom-brady).
+    validations: {required: true}
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of suggestion?
+      options: [Rating, Bio or career path, Stats, Add this player, Other]
+    validations: {required: true}
+  - type: input
+    id: rating
+    attributes:
+      label: Suggested rating (1–99), if it's a rating
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: For ratings, make the case. The owner has the final say on every rating. For facts, include a source.
+    validations: {required: true}

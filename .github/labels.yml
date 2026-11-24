@@ -1,0 +1,14 @@
+# Suggested labels. Create them in Issues > Labels (or with a label-sync action).
+- {name: "area: modes", color: "ff5a1f", description: "Game modes and games"}
+- {name: "area: hall-of-records", color: "0e5a3a", description: "Records, champions, leaders, all-league, famous teams"}
+- {name: "area: player-pages", color: "d9a520", description: "Player pages and ratings"}
+- {name: "area: data", color: "4f6159", description: "Shared data and tools"}
+- {name: "area: site", color: "8f7aa8", description: "Shell, design, art"}
+- {name: "mode: mystery-player", color: "fbd3c2"}
+- {name: "mode: career-path", color: "fbd3c2"}
+- {name: "mode: stat-spinner", color: "fbd3c2"}
+- {name: "mode: higher-or-lower", color: "fbd3c2"}
+- {name: "mode: stat-club", color: "fbd3c2"}
+- {name: "mode: draft-mode", color: "fbd3c2"}
+- {name: "bug", color: "c62828"}
+- {name: "good first issue", color: "7fd1a8"}

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mystery Player · StatBattle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+/* VOICE quick, confident game screen; the same lobby voice as the StatBattle home page
+   IDEA a scouting file on a hidden player, its facts unsealed one line at a time on the field of his sport
+   PICTURE the clue file: eight numbered lines, the first open, the rest sealed until a wrong guess opens the next
+   COLOUR turf green #0e5a3a dominant, chalk white cards, signal orange #ff5a1f for the answer box, new clues and wins
+   TYPE Archivo condensed 800 for titles and clue values, Archivo 400-600 for text
+   LAYOUT laptop: top bar, then the sport's pixel field as a banner over two columns (clue file | guess panel); phone: stacked */
+:root{color-scheme:light dark;
+--ink:light-dark(#10201a,#e9f1ec);--mute:light-dark(#4f6159,#9fb3a9);--line:light-dark(#dfe7e2,#22352c);
+--card:light-dark(#ffffff,#12211a);--soft:light-dark(#f2f6f3,#15261e);
+--turf:light-dark(#0e5a3a,#0c3f2a);--turf2:light-dark(#0b4b30,#093321);--accent:#ff5a1f;--good:light-dark(#0e7a45,#4fd08b);--bad:light-dark(#c0392b,#ff7b6b)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--turf);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip;min-height:100vh}
+button,input{font:inherit;color:inherit}
+h1,h2,h3{font-stretch:75%;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px max(5vw,16px);background:var(--turf2);color:#fff}
+.logo{display:flex;align-items:center;gap:10px;font-stretch:75%;font-weight:900;font-size:24px;letter-spacing:-.02em;color:#fff;text-decoration:none}
+.logo svg{width:28px;height:28px}.logo b{color:var(--accent)}
+.logo small{font-stretch:100%;font-weight:600;font-size:14px;opacity:.75;letter-spacing:0}
+.ctrls{display:flex;gap:10px;flex-wrap:wrap}
+.seg{display:flex;background:rgba(255,255,255,.1);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:none;min-height:44px;padding:0 14px;border-radius:9px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.seg button svg{width:24px;height:24px;image-rendering:pixelated}
+.seg button[aria-pressed=true]{background:#fff;color:#0b4b30}
+.seg small{font-size:13px;font-weight:400;opacity:.7}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(18px,3vw,36px) max(5vw,16px) 48px}
+.ban{position:relative;border-radius:20px 20px 0 0;overflow:hidden;min-height:150px;background:var(--turf) center/cover no-repeat;image-rendering:pixelated;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 22px;color:#fff}
+.ban::before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,15,10,.9) 0,rgba(5,15,10,.55) 55%,rgba(5,15,10,.15) 100%)}
+.ban>*{position:relative}
+.ban h1{font-size:clamp(32px,5vw,48px)}
+.ban p{margin:4px 0 0;color:rgba(255,255,255,.85)}
+.meter{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;font-size:14px;font-weight:600;white-space:nowrap}
+.chip b{font-size:20px;font-stretch:75%;font-weight:800;margin-right:4px;font-variant-numeric:tabular-nums}
+.board{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);background:var(--card);border-radius:0 0 20px 20px;box-shadow:0 6px 0 -2px rgba(0,0,0,.2)}
+.file{padding:20px 22px 24px;border-right:1px solid var(--line)}
+.side{padding:20px 22px 24px;display:grid;gap:18px;align-content:start}
+h2.sm{font-size:22px;margin-bottom:12px}
+.clues{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.clue{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--soft);border:2px solid transparent}
+.clue .n{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;background:var(--card);font-weight:800;font-stretch:75%;font-size:18px;color:var(--mute)}
+.clue small{display:block;font-size:13px;font-weight:600;color:var(--mute)}
+.clue .v{display:block;font-stretch:75%;font-weight:800;font-size:22px;line-height:1.15}
+.clue.locked .v{font-stretch:100%;font-weight:500;font-size:15px;color:var(--mute)}
+.clue.open .n{background:var(--turf);color:#fff}
+.clue.fresh{border-color:var(--accent);animation:pop .45s ease-out}
+@keyframes pop{from{transform:scale(.97);opacity:.4}to{transform:none;opacity:1}}
+.ask{position:relative}
+.ask label{display:block;font-weight:700;margin-bottom:8px}
+.row{display:flex;gap:8px}
+.ask input{flex:1;min-height:52px;padding:0 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:17px;font-weight:600}
+.ask input:focus{outline:none;border-color:var(--accent)}
+.btn{border:0;background:var(--accent);color:#fff;font-weight:700;min-height:52px;padding:0 20px;border-radius:12px;cursor:pointer;font-size:17px;white-space:nowrap}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.seg button:focus-visible,.sug button:focus-visible,.logo:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.sug{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--card);border:2px solid var(--line);border-radius:12px;box-shadow:0 14px 30px rgba(0,0,0,.18);z-index:5;max-height:300px;overflow:auto;padding:4px}
+.sug button{display:flex;width:100%;justify-content:space-between;gap:10px;border:0;background:none;text-align:left;min-height:44px;padding:0 10px;border-radius:8px;cursor:pointer;font-weight:600}
+.sug button small{color:var(--mute);font-weight:500;white-space:nowrap}
+.sug button[aria-selected=true]{background:var(--soft)}
+.msg{min-height:24px;font-size:15px;margin:8px 0 0}
+.msg.bad{color:var(--bad)}.msg.good{color:var(--good)}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;background:var(--soft);font-size:15px}
+.hist li b{font-weight:700}
+.hist li span{color:var(--mute);font-size:14px;text-align:right}
+.hist li.ok{background:color-mix(in srgb,var(--good) 16%,var(--card))}
+.empty{color:var(--mute);font-size:15px;margin:0}
+.end{border-radius:14px;padding:16px;background:var(--soft);border:2px solid var(--line);display:grid;gap:10px}
+.end.win{border-color:var(--good)}.end.lose{border-color:var(--bad)}
+.end h3{font-size:26px}
+.end p{margin:0}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;text-align:center}
+.stats div{background:var(--soft);border-radius:10px;padding:8px 4px}
+.stats b{display:block;font-stretch:75%;font-weight:800;font-size:24px;font-variant-numeric:tabular-nums}
+.stats small{font-size:13px;color:var(--mute)}
+.rules{margin:0;padding-left:20px;font-size:15px;color:var(--mute);display:grid;gap:2px}
+.foot{color:rgba(255,255,255,.75);font-size:13px;margin:16px 0 0}
+@media(max-width:860px){.board{grid-template-columns:minmax(0,1fr)}.file{border-right:0;border-bottom:1px solid var(--line)}}
+@media(max-width:600px){.top{justify-content:center}.seg button{padding:0 10px}.seg .lab,.seg small{display:none}.file,.side{padding:16px}.clue .v{font-size:19px}.ban{padding:16px}}
+@media(prefers-reduced-motion:reduce){.clue.fresh{animation:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="../../index.html" title="Back to the StatBattle home page"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="5" width="2" height="3" fill="#fff"/><rect x="3" y="2" width="2" height="6" fill="#ff5a1f"/><rect x="6" y="0" width="2" height="8" fill="#fff"/></svg>Stat<b>Battle</b> <small>Home</small></a>
+  <div class="ctrls">
+    <div class="seg" role="group" aria-label="Sport" id="lgs"></div>
+    <div class="seg" role="group" aria-label="Player pool">
+      <button id="casual" aria-pressed="true" title="Players active in the last 10 years">Casual <small>Last 10 Years</small></button>
+      <button id="expert" aria-pressed="false" title="Players from all eras">Expert <small>All-time</small></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="ban" id="ban">
+    <div><h1>Mystery Player</h1><p id="sub"></p></div>
+    <div class="meter"><span class="chip" id="mClues"></span><span class="chip" id="mPts"></span></div>
+  </section>
+  <div class="board">
+    <section class="file" aria-labelledby="fileT">
+      <h2 class="sm" id="fileT">The clues</h2>
+      <ol class="clues" id="clues" aria-live="polite"></ol>
+    </section>
+    <section class="side">
+      <div class="ask" id="ask">
+        <label for="q">Who is it?</label>
+        <div class="row">
+          <input id="q" autocomplete="off" spellcheck="false" placeholder="Type a player’s name" role="combobox" aria-expanded="false" aria-controls="sug" aria-autocomplete="list">
+          <button class="btn" id="go">Guess</button>
+        </div>
+        <div class="sug" id="sug" role="listbox" hidden></div>
+        <p class="msg" id="msg" aria-live="polite"></p>
+      </div>
+      <div id="endBox" hidden></div>
+      <div>
+        <h2 class="sm">Your guesses</h2>
+        <ul class="hist" id="hist"></ul>
+      </div>
+      <div class="acts" id="acts"><button class="btn ghost" id="giveup">Give up</button><button class="btn ghost" id="skip">New player</button></div>
+      <div>
+        <h2 class="sm" id="statT"></h2>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div>
+        <h2 class="sm">How it plays</h2>
+        <ol class="rules">
+          <li>Years Active is shown first. Each wrong guess opens the next clue.</li>
+          <li>Your guess has to fit every clue that’s open. A guess that doesn’t fit is turned back and doesn’t cost you.</li>
+          <li>Solve it with fewer clues for more points: 8 with one clue, down to 1 with all eight.</li>
+        </ol>
+      </div>
+    </section>
+  </div>
+  <p class="foot" id="foot"></p>
+</main>
+
+<script src="../../assets/svgs.js"></script>
+<script src="../../data/players.js"></script>
+<script>
+{
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SVGS = window.SB_SVGS || {};
+const NOW = 2026, CASUAL_FROM = 2016, MAX = 8;
+
+const LEAGUES = {
+  football:{lg:'nfl',name:'Football',short:'NFL',title:'Super Bowls won',from:'College'},
+  basketball:{lg:'nba',name:'Basketball',short:'NBA',title:'NBA titles',from:'College'},
+  baseball:{lg:'mlb',name:'Baseball',short:'MLB',title:'World Series titles',from:'Born in'},
+  hockey:{lg:'nhl',name:'Hockey',short:'NHL',title:'Stanley Cups',from:'Born in'}
+};
+const ORDER = ['basketball','football','baseball','hockey'];
+const POS = {
+  QB:['Quarterback','QB'],RB:['Running back','RB'],WR:['Wide receiver','WR'],TE:['Tight end','TE'],
+  DE:['Defensive end','DL'],DT:['Defensive tackle','DL'],LB:['Linebacker','LB'],CB:['Cornerback','DB'],S:['Safety','DB'],
+  PG:['Point guard','G'],SG:['Shooting guard','G'],SF:['Small forward','F'],PF:['Power forward','F'],C:['Center','C'],
+  SP:['Starting pitcher','P'],RP:['Relief pitcher','P'],'1B':['First baseman','IF'],'2B':['Second baseman','IF'],SS:['Shortstop','IF'],'3B':['Third baseman','IF'],
+  LF:['Left fielder','OF'],CF:['Center fielder','OF'],RF:['Right fielder','OF'],DH:['Designated hitter','DH'],
+  LW:['Left wing','W'],RW:['Right wing','W'],D:['Defenseman','D'],G:['Goaltender','GK']
+};
+const GROUP_NAME = {DL:'defensive lineman',DB:'defensive back',G:'guard',F:'forward',C:'center',P:'pitcher',IF:'infielder',OF:'outfielder',W:'winger',GK:'goaltender',QB:'quarterback',RB:'running back',WR:'wide receiver',TE:'tight end',LB:'linebacker',DH:'designated hitter',D:'defenseman'};
+// hockey centers group as C too; keep NBA and NHL "C" separate by league anyway
+
+// ---------- players ----------
+const PLAYERS = (window.SB_PLAYERS || []).map((r, i) => {
+  const [lg, name, pos, from, y0, y1, draft, st, titles, mvp, hof, alt] = r;
+  const stints = st.split('|').map(s => { const m = s.match(/^(.*) (\d{4})-(\d{4})?$/); return {team:m[1], a:+m[2], b:m[3] ? +m[3] : 0}; });
+  return {id:i, lg, name, pos, from, y0, y1, draft, stints, titles, mvp, hof, alt:alt || []};
+});
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[.'’`,]/g,'').replace(/[-_]/g,' ').replace(/\b(jr|sr|ii|iii|iv)\b/g,'').replace(/\s+/g,' ').trim();
+PLAYERS.forEach(p => { p.keys = [p.name, ...p.alt].map(norm); });
+const last = p => p.y1 || NOW;
+const years = p => `${p.y0}–${p.y1 ? p.y1 : 'present'}`;
+const posName = p => (POS[p.pos] || [p.pos])[0];
+const group = p => (POS[p.pos] || [p.pos, p.pos])[1];
+const draftKey = p => Array.isArray(p.draft) ? p.draft[0] : p.draft;
+const draftText = p => {
+  const d = p.draft;
+  if (Array.isArray(d)) return `${d[0]} · round ${d[1]}, pick ${d[2]}`;
+  return {pre:'Before his league had a draft', und:'Undrafted', ifa:'Signed as an international amateur', npb:'Signed from Japan’s pro league', nd:'Never drafted'}[d] || d;
+};
+const fromText = p => p.from || 'None, straight to the pros';
+const hofText = p => ['Eligible, not inducted','Inducted','Not yet eligible'][p.hof];
+const mainTeam = p => { const len = s => (s.b || NOW) - s.a + 1, tot = {}; p.stints.forEach(s => tot[s.team] = (tot[s.team]||0) + len(s)); return Object.keys(tot).sort((a,b) => tot[b]-tot[a])[0]; };
+const playedFor = (p, t) => p.stints.some(s => s.team === t);
+
+// ---------- clues: label, value, fit(guess, answer) -> '' if it fits, else the reason ----------
+const CLUES = [
+  {k:'Years active', v:p => years(p),
+   fit:(g,a) => (g.y0 <= last(a) && last(g) >= a.y0) ? '' : `${g.name} played ${years(g)}, which never overlaps ${years(a)}.`},
+  {k:'Position', v:p => posName(p),
+   fit:(g,a) => group(g) === group(a) ? '' : `${g.name} is a ${posName(g).toLowerCase()}, not a ${GROUP_NAME[group(a)] || posName(a).toLowerCase()}.`},
+  {k:'Draft', v:p => draftText(p),
+   fit:(g,a) => draftKey(g) === draftKey(a) ? '' : `${g.name}’s draft: ${draftText(g).toLowerCase()}.`},
+  {k:L => L.from, v:p => fromText(p),
+   fit:(g,a) => g.from === a.from ? '' : `${g.name}: ${fromText(g)}.`},
+  {k:L => L.title, v:p => p.titles ? String(p.titles) : 'None',
+   fit:(g,a) => g.titles === a.titles ? '' : `${g.name} won ${g.titles || 'no'} ${g.titles === 1 ? 'title' : 'titles'}.`},
+  {k:L => L.lg === 'nhl' ? 'Hart Trophies (MVP)' : 'MVP awards', v:p => p.mvp ? String(p.mvp) : 'None',
+   fit:(g,a) => g.mvp === a.mvp ? '' : `${g.name} won ${g.mvp || 'no'} MVP ${g.mvp === 1 ? 'award' : 'awards'}.`},
+  {k:'Hall of Fame', v:p => hofText(p),
+   fit:(g,a) => g.hof === a.hof ? '' : `${g.name}: ${hofText(g).toLowerCase()}.`},
+  {k:'Played for', v:p => 'The ' + mainTeam(p),
+   fit:(g,a) => playedFor(g, mainTeam(a)) ? '' : `${g.name} never played for the ${mainTeam(a)}.`}
+];
+const label = (c, L) => typeof c.k === 'function' ? c.k(L) : c.k;
+
+// ---------- state ----------
+let sport = 'football', pool = 'casual', ans = null, open = 1, guesses = [], done = null, fresh = -1;
+try{ const h = location.hash.slice(1).split('-'); if (LEAGUES[h[0]]) sport = h[0]; if (h[1] === 'expert' || h[1] === 'casual') pool = h[1]; }catch(e){}
+try{ if (!location.hash) { pool = localStorage.getItem('sb-era') || pool; } }catch(e){}
+const L = () => LEAGUES[sport];
+const leaguePlayers = () => PLAYERS.filter(p => p.lg === L().lg);
+const answerPool = () => leaguePlayers().filter(p => pool === 'expert' || last(p) >= CASUAL_FROM);
+
+const bags = {};
+const draw = () => {
+  const key = sport + pool;
+  if (!bags[key] || !bags[key].length) {
+    bags[key] = answerPool().map(p => p.id).sort(() => Math.random() - .5);
+    if (ans && bags[key].length > 1 && bags[key][bags[key].length-1] === ans.id) bags[key].unshift(bags[key].pop());
+  }
+  return PLAYERS[bags[key].pop()];
+};
+
+// stats per sport and pool
+const SKEY = 'sb-mystery-stats';
+const loadS = () => { try{ return JSON.parse(localStorage.getItem(SKEY) || '{}') || {}; }catch(e){ return {}; } };
+const myStats = () => loadS()[sport + '-' + pool] || {played:0, wins:0, streak:0, best:0, pts:0};
+const saveStats = st => { try{ const all = loadS(); all[sport + '-' + pool] = st; localStorage.setItem(SKEY, JSON.stringify(all)); }catch(e){} };
+
+// ---------- render ----------
+const renderLeagues = () => {
+  $('lgs').innerHTML = ORDER.map(s => `<button data-s="${s}" aria-pressed="${s===sport}" title="${LEAGUES[s].name} (${LEAGUES[s].short})">${SVGS[s]||''}<span class="lab">${LEAGUES[s].name}</span></button>`).join('');
+  $('casual').setAttribute('aria-pressed', pool === 'casual');
+  $('expert').setAttribute('aria-pressed', pool === 'expert');
+};
+const render = () => {
+  const lg = L();
+  $('ban').style.backgroundImage = `url(../../assets/bg/${sport}.png)`;
+  $('sub').textContent = `${lg.short} · ${pool === 'expert' ? 'Expert: any era' : 'Casual: active in the last 10 years'} · ${answerPool().length} players in the pool`;
+  const pts = Math.max(1, MAX - open + 1);
+  $('mClues').innerHTML = `<b>${open}</b>of ${MAX} clues`;
+  $('mPts').innerHTML = done ? (done === 'win' ? `<b>${done && ptsWon}</b>points won` : '<b>0</b>points') : `<b>${pts}</b>points if you get it now`;
+  const showAll = !!done;
+  $('clues').innerHTML = CLUES.map((c, i) => {
+    const vis = i < open || showAll;
+    return `<li class="clue ${vis ? 'open' : 'locked'}${i === fresh ? ' fresh' : ''}"><span class="n">${i+1}</span><span><small>${esc(label(c, lg))}</small><span class="v">${vis ? esc(c.v(ans)) : (i === open ? 'Opens after your next wrong guess' : 'Sealed')}</span></span></li>`;
+  }).join('');
+  fresh = -1;
+  $('hist').innerHTML = guesses.length ? guesses.map(g => `<li class="${g.ok ? 'ok' : ''}"><b>${esc(g.p.name)}</b><span>${g.ok ? 'Correct' : 'Fit the clues, wrong player'}</span></li>`).join('') : '<li class="empty" style="background:none;padding:0">No guesses yet.</li>';
+  const playing = !done;
+  $('q').disabled = $('go').disabled = $('giveup').disabled = !playing;
+  if (!playing) $('q').value = '';
+  $('acts').hidden = !playing;
+  $('skip').textContent = playing ? 'Skip to a new player' : 'Next player';
+  const eb = $('endBox');
+  if (done) {
+    eb.hidden = false;
+    eb.className = 'end ' + done;
+    const a = ans;
+    eb.innerHTML = `<h3>${done === 'win' ? 'You got him' : 'The mystery player was'}</h3>
+      <p><b>${esc(a.name)}</b>, ${esc(posName(a).toLowerCase())}, ${esc(years(a))}. ${esc(a.stints.map(s => s.team).filter((t,i,arr) => arr.indexOf(t) === i).join(', '))}.</p>
+      ${done === 'win' ? `<p>Solved with ${open} ${open === 1 ? 'clue' : 'clues'} for <b>${ptsWon} ${ptsWon === 1 ? 'point' : 'points'}</b>.</p>` : ''}
+      <div class="acts"><button class="btn" id="next">Next player</button></div>`;
+    $('next').onclick = () => newRound(true);
+  } else { eb.hidden = true; eb.innerHTML = ''; }
+  const st = myStats();
+  $('statT').textContent = `Your ${lg.short} record · ${pool === 'expert' ? 'Expert' : 'Casual'}`;
+  $('stats').innerHTML = [['Played',st.played],['Solved',st.wins],['Streak',st.streak],['Best',st.best]].map(([k,v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('');
+  $('foot').textContent = `Player pool: ${PLAYERS.length} hand-picked players across the NFL, NBA, MLB and NHL, checked November 19, 2026. Active careers run through the 2025–26 season.`;
+};
+let ptsWon = 0;
+
+const newRound = (focus) => {
+  ans = draw(); open = 1; guesses = []; done = null; ptsWon = 0;
+  $('q').value = ''; $('msg').textContent = ''; $('msg').className = 'msg'; hideSug();
+  render();
+  if (focus) $('q').focus();
+};
+const finish = (result) => {
+  done = result;
+  const st = myStats();
+  st.played++;
+  if (result === 'win') {
+    ptsWon = Math.max(1, MAX - open + 1);
+    st.wins++; st.streak++; st.best = Math.max(st.best, st.streak); st.pts += ptsWon;
+    try{ window.StatBattle && window.StatBattle.recordWin && window.StatBattle.recordWin('mystery-player', sport); }catch(e){}
+  } else st.streak = 0;
+  saveStats(st);
+  render();
+  $('next') && $('next').focus();
+};
+
+// ---------- guessing ----------
+const findExact = text => { const n = norm(text); return leaguePlayers().find(p => p.keys.includes(n)); };
+const suggest = text => {
+  const toks = norm(text).split(' ').filter(Boolean);
+  if (!toks.length) return [];
+  return leaguePlayers().filter(p => p.keys.some(k => { const w = k.split(' '); return toks.every(t => w.some(x => x.startsWith(t))); }))
+    .sort((a,b) => a.name.localeCompare(b.name)).slice(0, 8);
+};
+const lev = (a, b) => { const d = Array.from({length:a.length+1}, (_, i) => [i]); for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)); return d[a.length][b.length]; };
+const closest = text => { const n = norm(text); let best = null, bd = 3; leaguePlayers().forEach(p => p.keys.forEach(k => { const d = lev(n, k); if (d < bd) { bd = d; best = p; } })); return best; };
+
+let sugList = [], sel = 0;
+const hideSug = () => { $('sug').hidden = true; $('q').setAttribute('aria-expanded','false'); sugList = []; };
+const showSug = () => {
+  sugList = suggest($('q').value); sel = 0;
+  if (!sugList.length) return hideSug();
+  $('sug').innerHTML = sugList.map((p, i) => `<button type="button" role="option" id="o${i}" data-i="${i}" aria-selected="${i===sel}">${esc(p.name)}<small>${esc(years(p))}</small></button>`).join('');
+  $('sug').hidden = false; $('q').setAttribute('aria-expanded','true'); $('q').setAttribute('aria-activedescendant','o0');
+};
+const mark = () => { [...$('sug').children].forEach((b, i) => b.setAttribute('aria-selected', i === sel)); $('q').setAttribute('aria-activedescendant','o'+sel); const b = $('sug').children[sel]; b && b.scrollIntoView({block:'nearest'}); };
+
+const say = (t, cls) => { $('msg').textContent = t; $('msg').className = 'msg ' + (cls || ''); };
+const guess = p => {
+  hideSug();
+  if (!p) {
+    const c = closest($('q').value);
+    return say(c ? `Not in the ${L().short} player pool. Did you mean ${c.name}?` : `That name isn’t in the ${L().short} player pool yet. Pick one from the list as you type.`, 'bad');
+  }
+  if (guesses.some(g => g.p.id === p.id)) return say(`You already guessed ${p.name}.`, 'bad');
+  if (p.id === ans.id) { guesses.push({p, ok:true}); $('q').value = ''; say(''); return finish('win'); }
+  for (let i = 0; i < open; i++) { const why = CLUES[i].fit(p, ans); if (why) return say(`Doesn’t fit clue ${i+1} (${label(CLUES[i], L())}): ${why} That one didn’t count.`, 'bad'); }
+  guesses.push({p, ok:false}); $('q').value = '';
+  if (open >= MAX) { say(`Not ${p.name}.`, 'bad'); return finish('lose'); }
+  fresh = open; open++;
+  say(`Not ${p.name}, but he fit every clue. Clue ${open} is open.`);
+  render();
+};
+const submit = () => {
+  const t = $('q').value.trim(); if (!t || done) return;
+  guess(!$('sug').hidden && sugList[sel] ? sugList[sel] : findExact(t));
+};
+
+$('q').addEventListener('input', showSug);
+$('q').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' && sugList.length) { e.preventDefault(); sel = (sel + 1) % sugList.length; mark(); }
+  else if (e.key === 'ArrowUp' && sugList.length) { e.preventDefault(); sel = (sel - 1 + sugList.length) % sugList.length; mark(); }
+  else if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  else if (e.key === 'Escape') hideSug();
+});
+$('sug').addEventListener('mousedown', e => e.preventDefault());
+$('sug').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) guess(sugList[+b.dataset.i]); });
+$('q').addEventListener('blur', () => setTimeout(hideSug, 100));
+$('go').addEventListener('click', submit);
+$('giveup').addEventListener('click', () => { if (!done) { say(''); finish('lose'); } });
+$('skip').addEventListener('click', () => newRound(true));
+
+const setHash = () => { try{ history.replaceState(null, '', '#' + sport + '-' + pool); }catch(e){} };
+$('lgs').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b || b.dataset.s === sport) return; sport = b.dataset.s; setHash(); renderLeagues(); newRound(false); });
+const setPool = v => { if (v === pool) return; pool = v; try{ localStorage.setItem('sb-era', v); }catch(e){} setHash(); renderLeagues(); newRound(false); };
+$('casual').addEventListener('click', () => setPool('casual'));
+$('expert').addEventListener('click', () => setPool('expert'));
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1).split('-'); if (LEAGUES[h[0]]) { sport = h[0]; if (h[1] === 'expert' || h[1] === 'casual') pool = h[1]; renderLeagues(); newRound(false); } });
+
+renderLeagues();
+newRound(false);
+}
+</script>
+</body>
+</html>

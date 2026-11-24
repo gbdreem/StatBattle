@@ -1,0 +1,12 @@
+# Code owners are asked to review pull requests that touch their files.
+# Replace @your-github-username with your GitHub username (or a team) before turning on
+# "Require review from Code Owners" in Settings > Branches.
+
+*                          @your-github-username
+
+# The owner has the final say on player ratings.
+/players/ratings.json      @your-github-username
+
+# Add area maintainers below as people join, e.g.
+# /hall/                   @your-github-username @hall-maintainer
+# /games/mystery-player/   @your-github-username @mystery-maintainer

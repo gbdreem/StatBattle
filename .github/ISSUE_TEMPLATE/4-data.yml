@@ -1,0 +1,15 @@
+name: Data correction
+description: A wrong number or missing season in the shared data
+labels: ["area: data"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What's wrong
+      description: Player, season, stat, the value shown and the correct value.
+    validations: {required: true}
+  - type: input
+    id: source
+    attributes:
+      label: Source
+    validations: {required: true}

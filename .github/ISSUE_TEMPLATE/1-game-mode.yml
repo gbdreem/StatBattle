@@ -1,0 +1,33 @@
+name: Game mode idea or change
+description: Suggest a new game mode, or a change to an existing one
+labels: ["area: modes"]
+body:
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Which mode?
+      options: [New mode, Mystery Player, Career Path, Stat Spinner, Higher or Lower, Leaderboard Fill-In, Stat Club, Stat Line Reveal, Draft Mode, Franchise Leaders, Other]
+    validations: {required: true}
+  - type: checkboxes
+    id: sports
+    attributes:
+      label: Sports
+      options:
+        - label: Football
+        - label: Basketball
+        - label: Baseball
+        - label: Hockey
+        - label: Soccer
+        - label: Tennis
+        - label: MMA
+  - type: textarea
+    id: idea
+    attributes:
+      label: How it plays
+      description: What the player sees, what they do, how a round ends and how it's scored.
+    validations: {required: true}
+  - type: textarea
+    id: data
+    attributes:
+      label: Data it needs
+      description: Which stats or lists the game needs, and where they could come from.

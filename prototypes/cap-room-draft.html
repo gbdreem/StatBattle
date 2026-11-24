@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cap Room Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion: draft night in a front office, lively but orderly
+   IDEA the war-room big board under an arena's hardwood, then a playoff bracket on the scoreboard
+   PICTURE the live draft board (draft), the roster card (lineup), the bracket (tournament)
+   COLOUR white or near-black ground, maple hardwood band, basketball orange accent, team colours
+   TYPE Barlow Condensed 800 for names and numbers + Barlow for text
+   LAYOUT laptop: clock bar, board 2fr beside rosters 1fr; phone: clock, board, rosters stacked */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121417);--ink:light-dark(#15171a,#eef0f2);--mut:light-dark(#5b616b,#9aa1ab);--pan:light-dark(#f4f4f2,#1b1e23);--line:light-dark(#e3e3df,#2c3038);--or:#e35d14;--orx:light-dark(#b8460a,#ff8a47);--wood1:#d9a066;--wood2:#c98a4f;--woodink:#2a1708}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3,.cond{font-family:"Barlow Condensed",Barlow,sans-serif;letter-spacing:-.01em;line-height:1.05;margin:0}
+h1{font-size:clamp(34px,5vw,52px);font-weight:800;text-wrap:balance}
+h2{font-size:28px;font-weight:800}
+h3{font-size:20px;font-weight:700}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.band{padding:clamp(18px,3vw,36px) max(4vw,16px)}
+.wood{background:repeating-linear-gradient(90deg,var(--wood1) 0 58px,var(--wood2) 58px 60px,#dfa96f 60px 118px,var(--wood2) 118px 120px);color:var(--woodink);padding:14px max(4vw,16px);display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between;border-bottom:4px solid var(--or)}
+.wood .brand{font:800 26px/1 "Barlow Condensed",sans-serif;display:flex;align-items:center;gap:10px}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps span{font:700 15px/1 "Barlow Condensed",sans-serif;padding:7px 11px;border-radius:99px;background:rgba(255,255,255,.35)}
+.steps span.on{background:var(--woodink);color:#fbe3c7}
+.btn{min-height:44px;padding:10px 18px;border-radius:10px;border:0;background:var(--or);color:#fff;font-weight:700}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{background:var(--line);color:var(--mut);cursor:not-allowed;filter:none}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+.fine{font-size:13px;color:var(--mut)}
+.ovr{display:inline-grid;place-items:center;min-width:40px;height:34px;border-radius:8px;font:800 20px/1 "Barlow Condensed",sans-serif;color:#fff;background:#6b7280}
+.o95{background:#b8460a}.o90{background:#e35d14}.o85{background:#2457c5}.o80{background:#3f7d58}.o75{background:#6b7280}.o60{background:#9ca3af}
+.pos{display:inline-block;min-width:22px;text-align:center;font:700 13px/20px "Barlow Condensed",sans-serif;border-radius:5px;background:var(--pan);border:1px solid var(--line);color:var(--mut)}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* lobby */
+.lobby{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(20px,4vw,48px);align-items:start}
+.lede{font-size:17px;max-width:60ch;margin:12px 0 20px}
+.field{margin:0 0 16px;border:0;padding:0}
+.field legend,.field label.l{display:block;font-weight:700;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0}
+.seg span{display:block;min-height:44px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--pan);font-weight:600}
+.seg span small{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.seg input:checked+span{border-color:var(--or);background:color-mix(in srgb,var(--or) 12%,var(--bg))}
+.seg input:focus-visible+span{outline:3px solid var(--or)}
+.txt{min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;width:100%;max-width:320px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{border-radius:14px;padding:12px;background:linear-gradient(160deg,var(--pan),var(--bg));border:1px solid var(--line);display:grid;gap:6px}
+.card .nm{font:800 21px/1 "Barlow Condensed",sans-serif}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.bars{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 6px;font-size:13px;color:var(--mut);align-items:center}
+.bars i{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bars i b{display:block;height:100%;background:var(--or)}
+/* draft */
+.clock{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px 24px;align-items:center;background:var(--pan);border-bottom:1px solid var(--line)}
+.clk{font:800 clamp(40px,6vw,64px)/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:center}
+.clk.low{color:var(--orx)}
+.otc .who{font:800 26px/1.05 "Barlow Condensed",sans-serif}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.mine{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:flex-end}
+.stat b{display:block;font:800 22px/1 "Barlow Condensed",sans-serif}
+.stat{font-size:13px;color:var(--mut)}
+.dgrid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+.chip{min-height:40px;padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--bg);font-weight:600}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tools .txt{max-width:220px;min-height:40px}
+.tools select{min-height:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:6px 10px;font-size:16px}
+.scroll{overflow-x:auto}
+.boardwrap{max-height:70vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:var(--pan);font-size:13px;font-weight:700;color:var(--mut);text-align:left;padding:8px 6px;z-index:1;white-space:nowrap}
+td{padding:7px 6px;border-top:1px solid var(--line);vertical-align:middle}
+tr.no td{opacity:.55}
+td .pn{font-weight:700;line-height:1.15}
+td .sub{font-size:13px;color:var(--mut);white-space:nowrap}
+.dr{min-height:36px;padding:6px 12px;border-radius:8px;border:0;background:var(--or);color:#fff;font-weight:700;white-space:nowrap}
+.dr:disabled{background:transparent;color:var(--mut);font-weight:500;font-size:13px;cursor:default;padding:6px 0}
+.teams{display:grid;gap:12px}
+.team{border:1px solid var(--line);border-radius:12px;padding:12px;border-top:5px solid var(--c)}
+.team.now{box-shadow:0 0 0 2px var(--c)}
+.team h3{display:flex;justify-content:space-between;gap:8px}
+.budget{height:8px;border-radius:4px;background:var(--line);margin:8px 0 4px;overflow:hidden}
+.budget b{display:block;height:100%;background:var(--c)}
+.ros{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px;font-size:14px}
+.ros li{display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;gap:6px;align-items:center}
+.ros li.empty{color:var(--mut);border:1px dashed var(--line);border-radius:6px;padding:1px 6px;display:block;font-size:13px}
+.ros .o{font:800 16px/1 "Barlow Condensed",sans-serif}
+.log{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.log div{flex:none;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:6px 10px;font-size:14px}
+/* lineup + tourney */
+.lgrid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:28px;align-items:start}
+.slot{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);width:100%;text-align:left;min-height:52px}
+.slot.st{border-color:var(--or);background:color-mix(in srgb,var(--or) 9%,var(--bg))}
+.slots{display:grid;gap:6px}
+.tag{font-size:13px;font-weight:700;color:var(--orx);white-space:nowrap}
+.seedrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.bk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.8fr);gap:0 28px;align-items:center;background:light-dark(#1d2027,#0b0c0f);color:#eef0f2;border-radius:16px;padding:clamp(16px,3vw,28px)}
+.col{display:grid;gap:22px}
+.ser{background:#2a2e37;border-radius:10px;overflow:hidden;position:relative}
+.ser .tm{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 12px;border-left:5px solid var(--c)}
+.ser .tm+.tm{border-top:1px solid #3a3f4a}
+.ser .tm.out{opacity:.45}
+.ser .w{font:800 24px/1 "Barlow Condensed",sans-serif}
+.ser .tn{font:700 18px/1.1 "Barlow Condensed",sans-serif}
+.ser .sd{font-size:13px;color:#9aa1ab}
+.champ{text-align:center;display:grid;gap:6px;justify-items:center}
+.trophy{width:84px;height:110px}
+.games{font-size:13px;color:#9aa1ab;padding:4px 12px 8px}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.box{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.final{font:800 clamp(28px,4vw,40px)/1 "Barlow Condensed",sans-serif;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px}
+@media(max-width:900px){.dgrid,.lgrid{grid-template-columns:minmax(0,1fr)}.teams{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}.boardwrap{max-height:none}}
+@media(max-width:760px){.lobby{grid-template-columns:minmax(0,1fr)}.bk{grid-template-columns:minmax(0,1fr)}.col{gap:12px}.champ{padding-top:16px}.box{grid-template-columns:minmax(0,1fr)}.clock{grid-template-columns:auto minmax(0,1fr)}.mine{grid-column:1/-1;justify-content:flex-start}}
+@media(max-width:600px){.hide-s{display:none}table{font-size:14px}td,th{padding:6px 4px}td .sub{white-space:normal}.ovr{min-width:34px;height:30px;font-size:18px}.dr{padding:6px 10px}.dr:disabled{white-space:normal;max-width:6em;text-align:right}}
+@media(prefers-reduced-motion:no-preference){.pulse{animation:p 1s ease-in-out infinite alternate}@keyframes p{from{opacity:1}to{opacity:.55}}}
+</style>
+</head>
+<body>
+<header class="wood"><div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="#e35d14" stroke="#2a1708" stroke-width="1.5"/><path d="M1 15h28M15 1v28M5 5c6 5 6 15 0 20M25 5c-6 5-6 15 0 20" fill="none" stroke="#2a1708" stroke-width="1.5"/></svg>Cap Room Draft</div><nav class="steps" id="steps"></nav></header>
+<main id="app"></main>
+<script>{
+const RAW=`Nikola Jokic|C|98|55.2|29.6|12.7|10.2|95|80|99|97|60|75
+Shai Gilgeous-Alexander|G|97|38.3|32.7|5.0|6.4|95|82|88|55|85|50
+Victor Wembanyama|C|95|16.9|24.3|11.0|3.7|88|78|65|92|80|99
+Luka Doncic|G|95|49.5|28.2|8.2|7.7|88|85|95|75|50|45
+Giannis Antetokounmpo|F|94|58.5|30.4|11.9|6.5|99|40|80|92|72|85
+Anthony Edwards|G|92|48.9|27.6|5.7|4.5|85|88|72|58|80|55
+Jayson Tatum|F|90|58.4|26.8|8.7|6.0|82|84|78|80|78|65
+Jalen Brunson|G|90|37.7|26.0|2.9|7.3|90|82|88|35|50|35
+Cade Cunningham|G|90|49.0|26.1|6.1|9.1|85|76|93|62|72|50
+Donovan Mitchell|G|89|50.2|24.0|4.5|5.0|84|86|78|48|70|40
+Stephen Curry|G|89|62.6|24.5|4.4|6.0|75|99|85|45|60|35
+Anthony Davis|C|88|58.5|24.7|11.6|3.5|90|50|60|92|70|94
+Jalen Williams|F|88|41.2|21.6|5.3|5.1|82|78|78|62|85|65
+Evan Mobley|F|87|50.1|18.5|9.3|3.2|82|62|65|85|78|95
+Devin Booker|G|87|53.1|25.6|4.1|7.1|86|84|84|45|55|35
+Kevin Durant|F|87|46.0|26.6|6.0|4.2|90|90|72|62|65|65
+Jaylen Brown|F|87|53.1|22.2|5.8|4.5|86|72|68|62|78|55
+Karl-Anthony Towns|C|86|53.1|24.4|12.8|3.1|85|88|60|92|45|60
+Paolo Banchero|F|86|41.2|25.9|7.5|4.8|88|68|75|75|65|62
+Tyrese Haliburton|G|86|45.6|18.6|3.5|9.2|65|88|97|45|60|35
+Domantas Sabonis|C|85|45.0|19.1|13.9|6.0|85|55|85|98|45|60
+Alperen Sengun|C|85|36.6|19.1|10.3|4.9|90|50|80|90|50|72
+Tyrese Maxey|G|85|40.9|26.3|3.3|6.1|84|82|80|40|62|35
+Kawhi Leonard|F|85|50.0|21.5|5.9|3.1|86|84|65|62|85|65
+Joel Embiid|C|85|59.4|23.8|8.2|4.5|94|65|70|85|50|80
+Chet Holmgren|C|85|41.2|15.0|8.0|2.0|75|78|55|82|70|92
+Amen Thompson|F|84|12.2|14.1|8.2|3.8|85|40|70|80|95|72
+Jalen Johnson|F|84|30.0|18.9|10.0|5.0|85|60|75|85|72|65
+Scottie Barnes|F|84|41.6|19.3|7.7|5.8|80|60|80|78|80|75
+Franz Wagner|F|84|41.8|24.2|5.7|4.7|84|70|75|60|75|55
+Bam Adebayo|C|84|51.3|18.1|9.6|4.3|78|55|70|85|82|88
+Jaren Jackson Jr.|C|84|45.4|22.2|5.6|2.0|80|75|50|65|70|94
+Pascal Siakam|F|84|46.9|20.2|6.9|3.4|87|70|70|70|68|62
+De'Aaron Fox|G|84|51.6|23.5|4.6|6.1|86|72|82|45|70|35
+Kyrie Irving|G|84|39.5|24.7|4.8|4.6|88|88|80|45|55|30
+Trae Young|G|84|49.0|24.2|3.1|11.6|70|84|98|30|35|25
+Cooper Flagg|F|84|13.8|19.2|7.5|4.2|82|65|75|75|80|72|n
+Jamal Murray|G|82|50.1|21.4|3.9|6.0|78|84|80|42|55|35
+Derrick White|G|82|30.1|16.4|4.5|4.8|68|84|75|50|85|60
+Dyson Daniels|G|82|25.0|14.1|5.9|4.4|65|55|70|58|98|60
+James Harden|G|82|42.3|22.8|5.8|8.7|75|80|95|55|50|40
+Ja Morant|G|82|42.2|23.2|4.1|7.3|92|62|85|48|55|35
+LaMelo Ball|G|82|40.8|25.2|4.9|7.4|75|82|90|55|55|35
+Zion Williamson|F|82|42.2|24.6|7.2|5.3|97|30|70|72|55|60
+Lauri Markkanen|F|82|46.4|19.0|5.9|1.5|78|87|50|70|50|55
+Jimmy Butler|F|81|56.8|17.5|5.5|5.4|85|55|78|60|80|60
+Darius Garland|G|81|42.2|20.6|2.9|6.7|75|85|87|30|45|25
+Desmond Bane|G|81|36.7|19.2|5.3|5.3|72|87|72|52|65|40
+Deni Avdija|F|81|15.6|16.9|7.3|3.9|82|68|70|72|70|60
+Mikal Bridges|F|80|33.2|17.6|3.2|3.7|72|78|62|45|82|50
+OG Anunoby|F|80|39.6|18.0|4.6|2.2|70|78|50|55|90|65
+Rudy Gobert|C|80|36.5|12.0|10.9|2.1|70|5|35|92|50|95
+Myles Turner|C|80|27.0|15.6|6.5|1.5|70|80|40|65|50|88
+Ivica Zubac|C|80|20.0|16.8|12.6|2.7|82|5|45|95|45|85
+Trey Murphy III|F|80|27.3|21.2|5.1|3.5|72|84|55|55|65|55
+Stephon Castle|G|79|10.3|14.7|3.7|4.1|80|50|72|45|72|45
+Julius Randle|F|79|33.3|18.7|7.0|4.7|85|70|70|72|45|45
+Jarrett Allen|C|79|28.0|13.5|9.7|1.9|78|5|40|88|45|85
+Michael Porter Jr.|F|79|40.8|18.2|7.0|2.1|75|85|45|70|40|45
+Tyler Herro|G|79|31.0|23.9|5.2|5.5|72|85|75|52|40|30
+Ausar Thompson|F|78|10.9|10.1|6.0|2.4|72|30|55|70|92|70
+Jabari Smith Jr.|F|78|24.4|12.2|7.2|1.3|65|75|40|72|70|75
+Josh Giddey|G|78|25.0|14.6|8.1|7.2|70|70|88|75|45|40
+Jalen Suggs|G|78|32.4|16.2|4.0|3.7|70|70|68|45|90|55
+Aaron Gordon|F|78|32.5|14.7|4.8|3.2|82|70|60|62|75|70
+Brandon Miller|F|78|14.0|21.0|4.9|3.6|72|80|60|55|60|50
+Isaiah Hartenstein|C|78|28.5|11.2|9.8|3.8|72|10|65|90|45|80
+Jrue Holiday|G|78|34.8|11.1|4.3|4.0|60|78|72|50|85|50
+Christian Braun|G|77|22.0|15.4|5.2|2.5|78|65|55|58|78|50
+Herbert Jones|F|77|14.9|10.3|3.5|2.1|55|70|50|45|95|65
+Jaden McDaniels|F|77|23.8|12.2|5.8|2.1|65|65|45|55|90|70
+Jalen Green|G|77|35.6|21.0|4.6|3.4|78|72|60|45|45|30
+Zach LaVine|G|77|49.0|23.3|4.5|4.2|80|86|62|45|40|30
+Dereck Lively II|C|77|5.3|8.7|7.5|2.3|72|5|50|82|50|85
+Draymond Green|F|76|25.9|9.0|6.1|5.6|50|55|85|70|85|85
+Paul George|F|76|54.1|16.2|5.3|4.3|72|80|65|55|70|50
+Keegan Murray|F|76|26.7|12.4|7.0|1.8|65|72|45|68|70|60
+Onyeka Okongwu|C|76|16.0|13.4|10.0|2.4|72|35|50|85|50|78
+Naz Reid|C|76|25.0|14.2|6.0|2.3|72|78|50|65|45|60
+Payton Pritchard|G|76|7.7|14.3|3.8|3.5|60|84|72|45|55|30
+Cam Johnson|F|76|22.5|18.8|4.3|3.4|60|85|50|50|55|45
+Josh Hart|G|76|19.6|13.6|9.6|5.9|72|55|72|85|75|55
+Fred VanVleet|G|76|25.0|14.1|3.7|5.6|55|75|85|40|72|40
+Kel'el Ware|C|76|4.6|9.7|7.1|0.8|72|50|35|80|45|78
+Cason Wallace|G|76|5.7|8.3|3.4|2.1|55|72|60|40|88|45
+Kon Knueppel|F|76|10.0|14.4|4.0|2.7|62|86|60|50|55|40|n
+Dylan Harper|G|76|12.4|19.4|4.6|4.0|80|65|78|50|60|40|n
+Alex Sarr|C|76|12.5|13.0|6.6|2.6|65|60|50|70|50|85
+DeMar DeRozan|F|76|25.7|22.2|3.9|4.4|85|50|72|45|45|35
+Immanuel Quickley|G|75|32.5|17.1|5.8|5.8|65|78|78|50|50|30
+RJ Barrett|F|75|29.0|21.6|6.4|5.4|80|62|65|58|45|40
+Nickeil Alexander-Walker|G|75|15.0|9.4|3.1|2.7|55|75|60|40|82|45
+Zaccharie Risacher|F|74|14.2|12.6|3.5|1.2|65|72|45|45|60|45
+Lu Dort|G|74|18.2|10.1|4.1|1.6|50|72|40|45|92|50
+Andrew Wiggins|F|74|30.2|18.2|4.5|2.6|72|72|45|52|70|55
+Nic Claxton|C|74|25.4|10.0|7.0|2.3|70|5|45|75|55|82
+Daniel Gafford|C|74|14.4|12.3|7.0|1.0|78|0|30|78|40|82
+Toumani Camara|F|74|19.5|11.3|5.9|2.2|60|65|45|55|90|60
+Bilal Coulibaly|F|74|9.3|12.3|5.0|3.4|62|50|55|55|82|60
+Donte DiVincenzo|G|74|12.7|11.7|4.3|3.7|55|80|62|50|70|40
+Malik Monk|G|74|20.6|17.2|3.9|5.6|68|76|72|40|40|25
+Klay Thompson|G|72|17.5|14.0|3.4|2.0|50|85|45|40|55|40
+Kyle Kuzma|F|72|20.4|14.1|6.4|2.5|72|60|50|62|45|45
+Jordan Poole|G|72|34.0|20.5|3.0|4.5|70|76|70|35|35|25`;
+const P=RAW.split('\n').map((l,i)=>{const f=l.split('|');return{id:i,name:f[0],pos:f[1],ovr:+f[2],sal:+f[3],pts:+f[4],reb:+f[5],ast:+f[6],r:{ins:+f[7],thr:+f[8],pla:+f[9],reb:+f[10],pdef:+f[11],idef:+f[12]},ncaa:f[13]==='n'}});
+const CAP=164.961,MIN=2.3,SLOTS=10,REQ={G:3,F:3,C:2};
+const POSN={G:'guard',F:'forward',C:'center'};
+const COLS=['#e35d14','#2457c5','#8a3fc4','#0e8a7b'];
+const BOTS=[{name:'Riverside Stars',k:.1,blurb:'chases stars'},{name:'Bayport Bargains',k:.6,blurb:'hunts value'},{name:'Summit Balance',k:.3,blurb:'plays it straight'}];
+const MINS=[34,34,33,32,31,22,18,14,12,10];
+let S=null;
+
+function rnd(){S.rs=(S.rs+0x6D2B79F5)|0;let t=S.rs;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}
+const getP=id=>id<1000?P[id]:S.extra.find(x=>x.id===id);
+const spent=t=>t.ros.reduce((s,id)=>s+getP(id).sal,0);
+const left=t=>S.budget-spent(t);
+const cnt=t=>{const c={G:0,F:0,C:0};t.ros.forEach(id=>c[getP(id).pos]++);return c};
+const needs=c=>Object.keys(REQ).reduce((s,k)=>s+Math.max(0,REQ[k]-c[k]),0);
+const needList=t=>{const c=cnt(t);return Object.keys(REQ).filter(k=>c[k]<REQ[k]).map(k=>(REQ[k]-c[k])+' '+k)};
+const avail=()=>P.filter(p=>!S.taken.includes(p.id));
+const money=v=>'$'+v.toFixed(1)+'M';
+const value=p=>(p.ovr-60)/p.sal;
+
+function why(t,p){
+  const sl=SLOTS-t.ros.length;
+  if(sl<=0)return'Roster full';
+  if(left(t)-p.sal<(sl-1)*MIN-1e-9)return'Over budget';
+  const c=cnt(t);c[p.pos]++;
+  if(needs(c)>sl-1)return'Need '+needList(t).join(', ');
+  return'';
+}
+function choose(t,k){
+  k=k??t.k;
+  const sl=SLOTS-t.ros.length,per=left(t)/sl,c=cnt(t);
+  let best=null,bs=-1e9;
+  for(const p of avail()){
+    if(why(t,p))continue;
+    let s=p.ovr-Math.max(0,p.sal-per)*k+rnd()*3;
+    if(c[p.pos]<REQ[p.pos])s+=2+(sl<=4?6:0);
+    if(c[p.pos]>=5)s-=6;
+    if(sl>1){const ch=avail().filter(q=>q.id!==p.id).map(q=>q.sal).sort((x,y)=>x-y).slice(0,(sl-1)*2);let f=0;for(let j=0;j<sl-1;j++)f+=ch[j*2]??MIN;if(left(t)-p.sal<f)s-=12}
+    if(s>bs){bs=s;best=p}
+  }
+  return best;
+}
+function newGame(o){
+  const seat=Math.floor(Math.random()*4),teams=[];let b=0;
+  for(let i=0;i<4;i++){
+    if(i===seat)teams.push({name:o.name||'Your team',human:true,k:.3,ros:[],col:COLS[0]});
+    else{const bt=BOTS[b++];teams.push({name:bt.name,blurb:bt.blurb,human:false,k:bt.k,ros:[],col:COLS[b]})}
+  }
+  const order=[];
+  for(let r=0;r<SLOTS;r++){const row=[0,1,2,3];if(r%2)row.reverse();order.push(...row)}
+  S={phase:'draft',mult:o.mult,timer:o.timer,series:o.series,budget:+(CAP*o.mult).toFixed(3),teams,order,pick:0,taken:[],extra:[],log:[],rs:(Math.random()*2**31)|0,me:seat,filter:'all',q:'',sort:'ovr',starters:null,br:null,box:null};
+}
+function doPick(i,p,auto){
+  const t=S.teams[i];
+  if(!p){
+    const c=cnt(t);const pos=Object.keys(REQ).sort((a,b)=>(c[a]-REQ[a])-(c[b]-REQ[b]))[0];
+    p={id:1000+S.extra.length,name:'Replacement '+POSN[pos],pos,ovr:60,sal:MIN,pts:4.1,reb:2.3,ast:1.0,r:{ins:55,thr:55,pla:50,reb:55,pdef:55,idef:55},rep:true};
+    S.extra.push(p);
+  }else S.taken.push(p.id);
+  t.ros.push(p.id);
+  S.log.unshift({n:S.pick+1,t:i,id:p.id,auto:!!auto});
+  S.pick++;
+  if(S.pick>=S.order.length){S.phase='lineup';S.starters=autoStart(S.me)}
+}
+function autoStart(i){
+  const r=S.teams[i].ros.map(getP).sort((a,b)=>b.ovr-a.ovr),st=[];
+  const take=(pos,n)=>{for(const p of r){if(n<=0)break;if(p.pos===pos&&!st.includes(p.id)){st.push(p.id);n--}}};
+  take('C',1);take('G',2);take('F',1);
+  for(const p of r){if(st.length>=5)break;if(!st.includes(p.id))st.push(p.id)}
+  return st;
+}
+function lineup(i){
+  const st=i===S.me&&S.starters?S.starters:autoStart(i);
+  const ros=S.teams[i].ros.map(getP);
+  const a=ros.filter(p=>st.includes(p.id)).sort((x,y)=>y.ovr-x.ovr);
+  const b=ros.filter(p=>!st.includes(p.id)).sort((x,y)=>y.ovr-x.ovr);
+  return[...a,...b].map((p,j)=>({p,min:MINS[j]}));
+}
+const rating=i=>lineup(i).reduce((s,x)=>s+x.p.ovr*x.min,0)/240;
+function agg(L,k){let s=0;for(const x of L)s+=x.p.r[k]*x.min;return s/240}
+function pickW(L,f){let tot=0;const w=L.map(x=>{const v=Math.max(1e-3,f(x));tot+=v;return v});let r=rnd()*tot;for(let i=0;i<L.length;i++){r-=w[i];if(r<=0)return i}return L.length-1}
+function simGame(a,b){
+  const L=[lineup(a),lineup(b)];
+  const box=L.map(l=>l.map(x=>({id:x.p.id,min:x.min,pts:0,reb:0,ast:0})));
+  const R=L.map(l=>({pla:agg(l,'pla'),pdef:agg(l,'pdef'),idef:agg(l,'idef'),reb:agg(l,'reb')}));
+  const sc=[0,0];
+  function one(o){
+    const d=1-o,l=L[o],O=R[o],D=R[d];
+    if(rnd()<.125+(D.pdef-70)*.0015-(O.pla-70)*.0015)return;
+    for(let tries=0;tries<4;tries++){
+      const si=pickW(l,x=>x.min*Math.pow(Math.max(1,x.p.ovr-55),1.7)),s=l[si].p;
+      const tr=Math.min(.6,Math.max(.04,.08+(s.r.thr-50)*.009));
+      let made,pts;
+      if(rnd()<tr){made=rnd()<.345+(s.r.thr-75)*.0045+(s.ovr-80)*.0015-(D.pdef-70)*.002+(O.pla-70)*.001;pts=3}
+      else{
+        if(rnd()<.13){const fp=Math.min(.92,.62+s.r.thr*.003);let ft=0;for(let j=0;j<2;j++)if(rnd()<fp)ft++;sc[o]+=ft;box[o][si].pts+=ft;return}
+        made=rnd()<.505+(s.r.ins-75)*.004+(s.ovr-80)*.002-(D.idef-70)*.0025+(O.pla-70)*.001;pts=2;
+      }
+      if(made){
+        sc[o]+=pts;box[o][si].pts+=pts;
+        if(rnd()<.6){const ai=pickW(l,x=>x===l[si]?0:x.min*x.p.r.pla**2);box[o][ai].ast++}
+        return;
+      }
+      if(rnd()<.26+(O.reb-D.reb)*.004){box[o][pickW(l,x=>x.min*x.p.r.reb**2)].reb++;continue}
+      box[d][pickW(L[d],x=>x.min*x.p.r.reb**2)].reb++;return;
+    }
+  }
+  for(let k=0;k<94;k++){one(0);one(1)}
+  let ot=0;
+  while(sc[0]===sc[1]){for(let k=0;k<10;k++){one(0);one(1)}ot++}
+  return{t:[a,b],sc,box,ot};
+}
+function startTourney(){
+  const seeds=[0,1,2,3].sort((x,y)=>rating(y)-rating(x));
+  S.seeds=seeds;
+  S.br={need:Math.ceil(S.series/2),rounds:[[{a:seeds[0],b:seeds[3],w:[0,0],g:[]},{a:seeds[1],b:seeds[2],w:[0,0],g:[]}]]};
+  S.phase='tourney';S.box=null;
+}
+const done=s=>Math.max(...s.w)>=S.br.need;
+const winner=s=>s.w[0]>s.w[1]?s.a:s.b;
+function playNext(){
+  const rs=S.br.rounds,cur=rs[rs.length-1];
+  let mine=null;
+  for(const s of cur){
+    if(done(s))continue;
+    const g=simGame(s.a,s.b);
+    s.w[g.sc[0]>g.sc[1]?0:1]++;
+    s.g.push({sc:g.sc,ot:g.ot});
+    if(s.a===S.me||s.b===S.me||!mine)mine=g;
+  }
+  if(mine)S.box=mine;
+  if(cur.every(done)){
+    if(rs.length===1){
+      const w=cur.map(winner).sort((x,y)=>S.seeds.indexOf(x)-S.seeds.indexOf(y));
+      rs.push([{a:w[0],b:w[1],w:[0,0],g:[]}]);
+    }else{S.champ=winner(cur[0]);S.phase='done'}
+  }
+}
+if(typeof module!=='undefined')module.exports={get S(){return S},set S(v){S=v},P,newGame,doPick,choose,why,startTourney,playNext,simGame,rating,spent,cnt,left,lineup};
+
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const oc=o=>o>=95?'o95':o>=90?'o90':o>=85?'o85':o>=80?'o80':o>=70?'o75':'o60';
+const ovr=p=>`<span class="ovr ${oc(p.ovr)}">${p.ovr}</span>`;
+const pos=p=>`<span class="pos">${p.pos}</span>`;
+const line=p=>p.rep?'Bench depth':`${p.pts} pts · ${p.reb} reb · ${p.ast} ast${p.ncaa?' (college)':''}`;
+let timerId=null,botId=null,tleft=0;
+const isMine=()=>S.phase==='draft'&&S.order[S.pick]===S.me;
+
+function steps(){
+  const ph=S?S.phase:'lobby',k={lobby:0,draft:1,lineup:2,tourney:3,done:3}[ph];
+  $('#steps').innerHTML=['Setup','Draft','Lineup','Playoffs'].map((s,i)=>`<span class="${i===k?'on':''}">${s}</span>`).join('');
+}
+function render(){
+  steps();
+  if(!S||S.phase==='lobby')return lobby();
+  if(S.phase==='draft')return draft();
+  if(S.phase==='lineup')return lineupView();
+  return tourney();
+}
+function tick(){
+  clearInterval(timerId);clearTimeout(botId);
+  render();
+  if(!S||S.phase!=='draft')return;
+  const i=S.order[S.pick],t=S.teams[i];
+  if(!t.human){botId=setTimeout(()=>{doPick(i,choose(t));tick()},550+Math.random()*500);return}
+  if(S.timer>0){
+    tleft=S.timer;
+    timerId=setInterval(()=>{
+      tleft--;const el=$('#clk');
+      if(el){el.textContent=tleft;el.classList.toggle('low',tleft<=10)}
+      if(tleft<=0){doPick(i,choose(t,.3),true);tick()}
+    },1000);
+  }
+}
+
+/* ---------- lobby ---------- */
+function seg(name,opts,val){
+  return `<div class="seg">${opts.map(o=>`<label><input type="radio" name="${name}" value="${o.v}" ${o.v==val?'checked':''}><span>${o.l}${o.s?`<small>${o.s}</small>`:''}</span></label>`).join('')}</div>`;
+}
+function pcard(p){
+  const b=[['3PT',p.r.thr],['Inside',p.r.ins],['Play',p.r.pla],['Reb',p.r.reb],['Defense',Math.max(p.r.pdef,p.r.idef)]];
+  return `<div class="card"><div class="row">${ovr(p)}<span class="num cond" style="font-size:20px;font-weight:800">${money(p.sal)}</span></div><div class="nm">${esc(p.name)}</div><div class="fine">${POSN[p.pos]} · ${line(p)}</div><div class="bars">${b.map(([l,v])=>`<span>${l}</span><i><b style="width:${v}%"></b></i>`).join('')}</div></div>`;
+}
+function lobby(){
+  const top=[...P].sort((a,b)=>b.ovr-a.ovr||a.sal-b.sal);
+  const picks=[top[0],top[2],top[1],P.find(p=>p.name==='Amen Thompson'),top[4],P.find(p=>p.name==='Dereck Lively II')];
+  app.innerHTML=`<section class="band lobby">
+  <div>
+    <h1>Draft ten NBA players. Beat three rival GMs.</h1>
+    <p class="lede">Four teams take turns in a snake draft until each has ten players: at least 3 guards, 3 forwards and 2 centers, all paid from one salary budget. Then the teams play best-of series, semifinals and a final.</p>
+    <form id="setup">
+      <div class="field"><label class="l" for="nm">Your team name</label><input class="txt" id="nm" name="nm" maxlength="24" value="Downtown Dreamers"></div>
+      <fieldset class="field"><legend>Salary budget (2026–27 cap is $165.0M)</legend>${seg('mult',[{v:1.5,l:'1.5× cap',s:money(CAP*1.5)},{v:2,l:'2× cap',s:money(CAP*2)},{v:2.5,l:'2.5× cap',s:money(CAP*2.5)}],2.5)}</fieldset>
+      <fieldset class="field"><legend>Pick clock</legend>${seg('timer',[{v:0,l:'Off'},{v:30,l:'30 s'},{v:60,l:'60 s'}],60)}</fieldset>
+      <fieldset class="field"><legend>Playoff series</legend>${seg('series',[{v:1,l:'1 game'},{v:3,l:'Best of 3'},{v:7,l:'Best of 7'}],7)}</fieldset>
+      <button class="btn" type="submit" style="font-size:18px;padding:12px 26px">Start the draft</button>
+    </form>
+  </div>
+  <div><h2 style="margin-bottom:12px">Top of the board</h2><div class="cards">${picks.map(pcard).join('')}</div>
+  <p class="fine" style="margin-top:12px">Sample data for this prototype: ${P.length} players. Salaries are approximate 2026–27 figures, stats are approximate 2024–25 per-game numbers (college for 2025 rookies), and ratings are estimates.</p></div>
+  </section>`;
+  $('#setup').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);newGame({name:f.get('nm').trim(),mult:+f.get('mult'),timer:+f.get('timer'),series:+f.get('series')});tick();scrollTo(0,0)};
+}
+
+/* ---------- draft ---------- */
+function rows(){
+  const me=S.teams[S.me],q=S.q.toLowerCase(),my=isMine();
+  let list=avail().filter(p=>(S.filter==='all'||p.pos===S.filter)&&(!q||p.name.toLowerCase().includes(q)));
+  const so={ovr:(a,b)=>b.ovr-a.ovr||a.sal-b.sal,cheap:(a,b)=>a.sal-b.sal,pricey:(a,b)=>b.sal-a.sal,value:(a,b)=>value(b)-value(a)}[S.sort];
+  list.sort(so);
+  if(!list.length)return `<tr><td colspan="8" class="fine" style="padding:16px">No available players match.</td></tr>`;
+  return list.map(p=>{const w=why(me,p);return `<tr class="${w?'no':''}"><td>${ovr(p)}</td><td><div class="pn">${esc(p.name)}</div><div class="sub">${pos(p)} ${line(p)}</div></td><td class="num cond" style="font-size:18px;font-weight:700">${money(p.sal)}</td><td class="num hide-s">${p.r.thr}</td><td class="num hide-s">${p.r.ins}</td><td class="num hide-s">${p.r.pla}</td><td class="num hide-s">${Math.max(p.r.pdef,p.r.idef)}</td><td class="num"><button class="dr" data-p="${p.id}" ${my&&!w?'':'disabled'}>${w?esc(w):my?'Draft':'Wait'}</button></td></tr>`}).join('');
+}
+function teamCard(t,i){
+  const sp=spent(t),list=t.ros.map(getP);const now=S.phase==='draft'&&S.order[S.pick]===i;
+  return `<div class="team ${now?'now':''}" style="--c:${t.col}"><h3><span>${esc(t.name)}${t.human?' (you)':''}</span><span class="num">${list.length}/10</span></h3>
+  <div class="fine">${t.human?'':esc(t.blurb)+' · '}${money(S.budget-sp)} left</div><div class="budget"><b style="width:${Math.min(100,sp/S.budget*100)}%"></b></div>
+  <ul class="ros">${list.map(p=>`<li>${pos(p)}<span>${esc(p.name)}</span><span class="o">${p.ovr}</span><span class="num fine">${money(p.sal)}</span></li>`).join('')}${list.length<10?`<li class="empty">${10-list.length} open · needs ${needList(t).join(', ')||'any position'}</li>`:''}</ul></div>`;
+}
+function draft(){
+  const i=S.order[S.pick],t=S.teams[i],me=S.teams[S.me],my=isMine();
+  const round=Math.floor(S.pick/4)+1,sl=10-me.ros.length,nextMine=S.order.indexOf(S.me,S.pick);
+  const away=nextMine<0?'':nextMine===S.pick?'You are on the clock':`Your pick in ${nextMine-S.pick}`;
+  const fq=document.activeElement&&document.activeElement.id==='q';
+  app.innerHTML=`<section class="band clock">
+   <div class="clk ${my?'':'fine'}" id="clk">${my?(S.timer?S.timer:'∞'):'…'}</div>
+   <div class="otc"><div class="fine">Round ${round} of 10 · pick ${S.pick+1} of 40 · ${away}</div><div class="who ${my?'':'pulse'}"><span class="dot" style="background:${t.col}"></span>${my?'Your pick':esc(t.name)+' is picking'}</div></div>
+   <div class="mine"><div class="stat"><b>${money(left(me))}</b>budget left</div><div class="stat"><b>${sl?money((left(me))/sl):'—'}</b>per open spot</div><div class="stat"><b>${needList(me).join(' · ')||'Covered'}</b>still needed</div>
+   <button class="btn ghost" id="rep" ${my?'':'disabled'} title="Adds a 60-rated player on a minimum deal">Sign replacement (${money(MIN)})</button></div>
+  </section>
+  <section class="band dgrid">
+   <div><div class="tools" role="group" aria-label="Filter">${['all','G','F','C'].map(f=>`<button class="chip ${S.filter===f?'on':''}" data-f="${f}">${f==='all'?'All':POSN[f]+'s'}</button>`).join('')}
+    <input class="txt" id="q" type="search" placeholder="Search players" value="${esc(S.q)}" aria-label="Search players">
+    <select id="sort" aria-label="Sort"><option value="ovr">Best rating</option><option value="value">Best value</option><option value="cheap">Cheapest</option><option value="pricey">Most expensive</option></select></div>
+    <div class="boardwrap scroll"><table><thead><tr><th>OVR</th><th>Player</th><th class="num">2026–27</th><th class="num hide-s">3PT</th><th class="num hide-s">INS</th><th class="num hide-s">PLAY</th><th class="num hide-s">DEF</th><th></th></tr></thead><tbody id="tb">${rows()}</tbody></table></div>
+    <h3 style="margin:18px 0 8px">Latest picks</h3><div class="log">${S.log.slice(0,12).map(l=>{const p=getP(l.id),tm=S.teams[l.t];return `<div style="--c:${tm.col}"><b>#${l.n}</b> ${esc(p.name)} <span class="fine">${esc(tm.name)}${l.auto?' · auto':''}</span></div>`}).join('')||'<span class="fine">No picks yet.</span>'}</div>
+   </div>
+   <aside class="teams">${S.teams.map(teamCard).join('')}</aside>
+  </section>`;
+  $('#sort').value=S.sort;
+  if(fq){const q=$('#q');q.focus();q.setSelectionRange(q.value.length,q.value.length)}
+}
+app.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!S)return;
+  if(b.dataset.p&&isMine()){const p=P[+b.dataset.p];if(!why(S.teams[S.me],p)){doPick(S.me,p);tick()}}
+  else if(b.dataset.f){S.filter=b.dataset.f;$('#tb').innerHTML=rows();document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===S.filter))}
+  else if(b.id==='rep'&&isMine()){doPick(S.me,null);tick()}
+  else if(b.dataset.s){const id=+b.dataset.s,st=S.starters;const k=st.indexOf(id);if(k>=0)st.splice(k,1);else if(st.length<5)st.push(id);render()}
+  else if(b.id==='auto'){S.starters=autoStart(S.me);render()}
+  else if(b.id==='go'){startTourney();render();scrollTo(0,0)}
+  else if(b.id==='next'){playNext();render()}
+  else if(b.id==='rest'){const n=S.br.rounds.length;while(S.phase==='tourney'&&S.br.rounds.length===n)playNext();render()}
+  else if(b.id==='again'){S=null;render();scrollTo(0,0)}
+});
+app.addEventListener('input',e=>{if(e.target.id==='q'){S.q=e.target.value;$('#tb').innerHTML=rows()}});
+app.addEventListener('change',e=>{if(e.target.id==='sort'){S.sort=e.target.value;$('#tb').innerHTML=rows()}});
+
+/* ---------- lineup ---------- */
+function lineupView(){
+  const me=S.teams[S.me],st=S.starters,ros=me.ros.map(getP).sort((a,b)=>st.includes(b.id)-st.includes(a.id)||b.ovr-a.ovr);
+  const L=st.length===5?lineup(S.me):null,mins=L?Object.fromEntries(L.map(x=>[x.p.id,x.min])):{};
+  const order=[0,1,2,3].sort((a,b)=>rating(b)-rating(a));
+  app.innerHTML=`<section class="band lgrid">
+  <div><h1>Set your starting five</h1><p class="lede">Tap players to move them in or out of the starting lineup. Starters play about 33 minutes; the bench splits the rest, best-rated first.</p>
+   <div class="slots">${ros.map(p=>`<button class="slot ${st.includes(p.id)?'st':''}" data-s="${p.id}">${ovr(p)}<span><b>${esc(p.name)}</b><br><span class="fine">${POSN[p.pos]} · ${line(p)}</span></span><span class="tag">${st.includes(p.id)?'Starter':''}</span><span class="num fine">${mins[p.id]?mins[p.id]+' min':''}</span></button>`).join('')}</div>
+   <div class="ctl"><button class="btn" id="go" ${st.length===5?'':'disabled'}>${st.length===5?'Start the playoffs':`Pick ${5-st.length} more starter${5-st.length>1?'s':''}`}</button><button class="btn ghost" id="auto">Auto lineup</button></div>
+  </div>
+  <aside><h2>Projected seeds</h2><p class="fine">Team rating is the minutes-weighted average of player ratings.</p>
+   ${order.map((i,k)=>{const t=S.teams[i];return `<div class="seedrow" style="--c:${t.col}"><span class="cond" style="font-size:24px;font-weight:800">${k+1}</span><span><span class="dot" style="background:${t.col}"></span><b>${esc(t.name)}</b><br><span class="fine">${money(spent(t))} payroll · ${t.ros.filter(id=>id>=1000).length} replacement</span></span><span class="cond num" style="font-size:26px;font-weight:800">${rating(i).toFixed(1)}</span></div>`}).join('')}
+  </aside></section>`;
+}
+
+/* ---------- tourney ---------- */
+function serBox(s,lbl){
+  if(!s)return `<div class="ser"><div class="tm" style="--c:#3a3f4a"><span></span><span class="sd">${lbl}</span><span></span></div><div class="tm" style="--c:#3a3f4a"><span></span><span class="sd">Waiting</span><span></span></div></div>`;
+  const d=done(s),w=d?winner(s):-1;
+  const tm=(i,k)=>{const t=S.teams[i];return `<div class="tm ${d&&w!==i?'out':''}" style="--c:${t.col}"><span class="sd">${S.seeds.indexOf(i)+1}</span><span class="tn">${esc(t.name)}${t.human?' (you)':''}</span><span class="w">${s.w[k]}</span></div>`};
+  return `<div class="ser">${tm(s.a,0)}${tm(s.b,1)}<div class="games">${s.g.length?s.g.map((g,j)=>`G${j+1} ${g.sc[0]}–${g.sc[1]}${g.ot?' OT':''}`).join(' · '):lbl}</div></div>`;
+}
+function boxTable(g,k){
+  const t=S.teams[g.t[k]],b=[...g.box[k]].sort((x,y)=>y.pts-x.pts);
+  return `<div><h3 style="margin-bottom:6px"><span class="dot" style="background:${t.col}"></span>${esc(t.name)}</h3><div class="scroll"><table><thead><tr><th>Player</th><th class="num">MIN</th><th class="num">PTS</th><th class="num">REB</th><th class="num">AST</th></tr></thead><tbody>${b.map(x=>`<tr><td>${esc(getP(x.id).name)}</td><td class="num">${x.min}</td><td class="num"><b>${x.pts}</b></td><td class="num">${x.reb}</td><td class="num">${x.ast}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function tourney(){
+  const r=S.br.rounds,semi=r[0],fin=r[1]?.[0],dn=S.phase==='done';
+  const g=S.box,need=S.br.need,me=S.teams[S.me];
+  const out=!dn&&(semi.some(s=>done(s)&&(s.a===S.me||s.b===S.me)&&winner(s)!==S.me)||fin&&done(fin)&&winner(fin)!==S.me);
+  const champ=dn?S.teams[S.champ]:null;
+  app.innerHTML=`<section class="band">
+   <h1 style="margin-bottom:14px">${dn?(S.champ===S.me?'You won the title.':esc(champ.name)+' won the title.'):fin?'The final':'Semifinals'}</h1>
+   <div class="bk">
+    <div class="col">${serBox(semi[0],'1 vs 4')}${serBox(semi[1],'2 vs 3')}</div>
+    <div class="col">${serBox(fin,'Final')}</div>
+    <div class="champ"><svg class="trophy" viewBox="0 0 84 110" aria-hidden="true"><defs><linearGradient id="gd" x1="0" x2="1"><stop offset="0" stop-color="#f6d27a"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs><path d="M18 8h48v20c0 18-10 30-24 32C28 58 18 46 18 28z" fill="url(#gd)"/><path d="M18 14H6c0 14 6 22 14 24M66 14h12c0 14-6 22-14 24" fill="none" stroke="#d4a64a" stroke-width="5"/><rect x="36" y="60" width="12" height="20" fill="#c8962f"/><rect x="22" y="80" width="40" height="10" rx="2" fill="#d4a64a"/><rect x="16" y="90" width="52" height="14" rx="3" fill="#3a2a10"/><circle cx="42" cy="30" r="9" fill="#e35d14"/></svg>
+     <div class="tn cond" style="font-size:22px;font-weight:800">${champ?esc(champ.name):'Champion'}</div><div class="sd" style="font-size:13px;color:#9aa1ab">${S.series===1?'Single game':'Best of '+S.series}</div></div>
+   </div>
+   <div class="ctl">${dn?`<button class="btn" id="again">Draft again</button>`:`<button class="btn" id="next">Play next game</button><button class="btn ghost" id="rest">Sim to end of round</button>`}${out?`<span class="fine" style="align-self:center">You're out. Keep simming to see who wins.</span>`:''}</div>
+   ${g?`<div class="final"><span>${esc(S.teams[g.t[0]].name)} ${g.sc[0]}</span><span class="fine">vs</span><span>${esc(S.teams[g.t[1]].name)} ${g.sc[1]}</span>${g.ot?`<span class="tag">${g.ot>1?g.ot+'OT':'OT'}</span>`:''}</div><div class="box">${boxTable(g,0)}${boxTable(g,1)}</div>`:`<p class="fine">First to ${need} win${need>1?'s':''} advances. Box scores show the latest game ${me.name?'involving your team':''}.</p>`}
+  </section>
+  <section class="band" style="padding-top:0"><h2 style="margin-bottom:12px">Rosters</h2><div class="teams" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))">${S.teams.map(teamCard).join('')}</div></section>`;
+}
+
+window.claude?.hot?.snapshot?.(()=>S);
+function start(d){if(d&&d.phase)S=d;tick()}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}</script>
+</body></html>

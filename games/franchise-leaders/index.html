@@ -1,0 +1,1504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Franchise Leaders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* Registered so the team colors can animate smoothly between teams */
+  @property --team-primary   { syntax: "<color>"; inherits: true; initial-value: #013369; }
+  @property --team-secondary { syntax: "<color>"; inherits: true; initial-value: #D50A0A; }
+
+  :root {
+    --bg: #f3f4f7;
+    --surface: #ffffff;
+    --surface-2: #eceef2;
+    --text: #14161a;
+    --muted: #555c69;
+    --border: #d5d9e0;
+    --accent: #013369;
+    --accent-text: #ffffff;
+    --focus: #c8102e;
+    --good: #0f7a3d;
+    --bad: #b3261e;
+    --team-text: #ffffff;
+    --team-accent-text: #ffffff;
+    --radius: 16px;
+    --font-display: "Oswald", "Arial Narrow", system-ui, sans-serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light dark;
+    transition: --team-primary .6s ease, --team-secondary .6s ease;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1015;
+      --surface: #161a21;
+      --surface-2: #1f252e;
+      --text: #eef0f4;
+      --muted: #a0a8b6;
+      --border: #2c333e;
+      --accent: #5b9bea;
+      --accent-text: #06121f;
+      --focus: #ff7070;
+      --good: #4cc27e;
+      --bad: #ff8a80;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.45;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ---------- Layout ---------- */
+  .app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: clamp(16px, 3vw, 32px);
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  }
+  header { grid-column: 1 / -1; }
+  .team-band {
+    height: 8px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    background: linear-gradient(90deg, var(--team-primary) 0 72%, var(--team-secondary) 72% 100%);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .sub { margin: .35rem 0 0; color: var(--muted); max-width: 62ch; }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(16px, 3vw, 28px);
+    display: grid;
+    gap: 18px;
+    justify-items: center;
+    min-width: 0;
+  }
+
+  /* ---------- Setup ---------- */
+  .setup { display: grid; gap: 12px; justify-items: center; width: 100%; }
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    margin: 0;
+    padding: 4px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--surface-2);
+    max-width: 100%;
+  }
+  .segmented label { position: relative; }
+  .segmented input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+  .segmented span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 54px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .2s, color .2s;
+  }
+  .segmented small { font-weight: 500; opacity: .85; margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .segmented input:checked + span { background: var(--accent); color: var(--accent-text); }
+  .segmented input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .rules { margin: 0; color: var(--muted); text-align: center; max-width: 52ch; }
+  .notice {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    max-width: 56ch;
+  }
+  .notice code { font-size: .95em; }
+
+  /* ---------- Scoreboard ---------- */
+  .scoreboard { width: 100%; display: grid; gap: 10px; }
+  .sb-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+  }
+  .sb-mode {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .sb-stats { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+  .sb-stat { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-size: .9rem; }
+  .pips { display: flex; gap: 5px; }
+  .pip { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+  .pip.used { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--border); }
+  .sb-total {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 7vw, 3.4rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .sb-of { font-size: .45em; color: var(--muted); font-weight: 500; letter-spacing: .03em; }
+  .progress {
+    height: 14px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width .6s cubic-bezier(.2, .9, .3, 1);
+  }
+  .progress-fill.done { background: var(--good); }
+  .sb-need { margin: 0; color: var(--muted); font-size: .92rem; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Wheel ---------- */
+  .wheel-wrap {
+    position: relative;
+    width: min(100%, 540px);
+    aspect-ratio: 1;
+    margin-top: 8px;
+  }
+  .rotor { position: absolute; inset: 0; will-change: transform; }
+  .rotor svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .rotor text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .03em;
+    pointer-events: none;
+  }
+  .pointer {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    translate: -50% 0;
+    width: 0; height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 32px solid var(--text);
+    filter: drop-shadow(0 2px 3px rgb(0 0 0 / .4));
+    z-index: 2;
+  }
+  .hub {
+    position: absolute;
+    top: 50%; left: 50%;
+    translate: -50% -50%;
+    width: 24%;
+    min-width: 72px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 5px solid var(--surface);
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.05rem, 3.6vw, 1.6rem);
+    letter-spacing: .08em;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgb(0 0 0 / .35);
+    z-index: 2;
+    transition: scale .15s ease, opacity .2s;
+  }
+  .hub:hover:not(:disabled) { scale: 1.06; }
+  .hub:active:not(:disabled) { scale: .97; }
+  .hub:disabled { cursor: not-allowed; opacity: .55; }
+  .hub[aria-busy="true"] { cursor: progress; opacity: 1; }
+  .hub:focus-visible { outline: 4px solid var(--focus); outline-offset: 4px; }
+  .hint { margin: 0; color: var(--muted); font-size: .9rem; text-align: center; }
+  kbd {
+    font: inherit; font-size: .85em; font-weight: 600;
+    padding: 1px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2);
+  }
+
+  /* ---------- Picks panel ---------- */
+  .history {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 16px 16px;
+    min-width: 0;
+  }
+  .history summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border-radius: 8px;
+  }
+  .history summary::-webkit-details-marker { display: none; }
+  .history summary::after { content: "▾"; font-size: 1rem; transition: rotate .2s; }
+  .history[open] summary::after { rotate: 180deg; }
+  .history summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .picks {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .picks li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .picks li.empty { background: none; color: var(--muted); padding: 4px 0; }
+  .chip {
+    flex: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--p) 0 50%, var(--s) 50% 100%);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--border);
+  }
+  .p-main { flex: 1; min-width: 0; display: grid; }
+  .p-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .p-sub { color: var(--muted); font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .p-yds { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .p-yds.zero { color: var(--muted); }
+  .picks li.flash { animation: flash 1.4s ease-out; }
+  @keyframes flash {
+    0%, 30% { box-shadow: inset 0 0 0 3px var(--team-secondary); background: color-mix(in srgb, var(--team-primary) 22%, var(--surface-2)); }
+    100% { box-shadow: inset 0 0 0 0 transparent; background: var(--surface-2); }
+  }
+  .yds-input {
+    flex: none;
+    width: 96px;
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .yds-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background-color .2s, scale .15s;
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: var(--accent-text); border-color: transparent; min-width: 160px; }
+  .btn-primary:hover { background: var(--accent); scale: 1.03; }
+  .btn-small { min-height: 36px; padding: 0 14px; font-size: .88rem; }
+
+  /* ---------- Turn takeover (team-colored) ---------- */
+  dialog.result {
+    width: min(92vw, 560px);
+    padding: 0;
+    border: 0;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--team-primary);
+    color: var(--team-text);
+    box-shadow: 0 30px 90px rgb(0 0 0 / .55);
+  }
+  dialog.result[open] { animation: pop .5s cubic-bezier(.2, .9, .3, 1.15); }
+  dialog::backdrop { background: rgb(0 0 0 / .62); backdrop-filter: blur(4px); }
+  @keyframes pop { from { opacity: 0; scale: .82; } to { opacity: 1; scale: 1; } }
+  .r-stripe {
+    height: 16px;
+    background: repeating-linear-gradient(-45deg, var(--team-secondary) 0 16px, transparent 16px 32px);
+  }
+  .r-body {
+    display: grid;
+    gap: 6px;
+    padding: clamp(22px, 5vw, 40px) clamp(20px, 5vw, 40px);
+    text-align: center;
+  }
+  .r-label { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+  .r-city {
+    margin: 8px 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 4vw, 1.6rem);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .r-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 10vw, 4.4rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .r-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+  .r-actions .btn { min-width: 120px; }
+  .btn-team { background: var(--team-secondary); color: var(--team-accent-text); border-color: transparent; }
+  .btn-team:hover { background: var(--team-secondary); scale: 1.04; }
+  .btn-ghost { color: var(--team-text); border: 2px solid currentColor; }
+  .btn-ghost:hover { background: rgb(127 127 127 / .2); }
+  dialog.result .btn:focus-visible { outline: 3px solid var(--team-text); outline-offset: 3px; }
+
+  .answer { display: grid; gap: 8px; margin-top: 18px; }
+  .answer-label { font-weight: 600; font-size: .95rem; }
+  .answer input {
+    font: inherit;
+    font-size: 1.15rem;
+    font-weight: 600;
+    min-height: 52px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 3px solid var(--team-secondary);
+    background: #ffffff;
+    color: #14161a;
+    text-align: center;
+    width: 100%;
+  }
+  .answer input:focus-visible { outline: 3px solid var(--team-text); outline-offset: 2px; }
+  .answer-help { margin: 0; font-size: .82rem; opacity: .85; }
+
+
+  /* ---------- Game summary ---------- */
+  dialog.summary {
+    width: min(92vw, 520px);
+    padding: clamp(22px, 5vw, 36px);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 30px 90px rgb(0 0 0 / .55);
+  }
+  dialog.summary[open] { animation: pop .5s cubic-bezier(.2, .9, .3, 1.15); }
+  .s-kicker { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align: center; }
+  .s-title {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 9vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .s-title.win { color: var(--good); }
+  .s-title.loss { color: var(--bad); }
+  .s-detail { margin: 10px 0 18px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+  dialog.summary .r-actions .btn { min-width: 140px; }
+
+  /* ---------- Franchise Leaders additions ---------- */
+  .pip.hit { background: var(--good); }
+  .pip.miss { background: var(--bad); opacity: .75; }
+  .pip.current { background: transparent; box-shadow: inset 0 0 0 3px var(--accent); }
+  .pip.todo { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--border); }
+
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .steps li {
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 32px; padding: 0 12px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-weight: 600; font-size: .88rem;
+  }
+  .steps li.current { background: var(--accent); color: var(--accent-text); }
+  .steps li.hit { color: var(--good); }
+  .steps li.miss { color: var(--bad); }
+
+  .r-prompt { margin: 14px 0 0; font-size: clamp(1.05rem, 3.6vw, 1.25rem); font-weight: 600; }
+  .g-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  .g-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; }
+  .g-dot.used { background: currentColor; opacity: .45; }
+  .g-dots-label { margin: 4px 0 0; font-size: .82rem; opacity: .85; }
+
+  .guesses { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; text-align: left; }
+  .guesses li, .board li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+  .g-x { flex: none; font-weight: 700; }
+  .g-name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .g-clue { flex: none; font-size: .88rem; opacity: .9; text-align: right; font-variant-numeric: tabular-nums; }
+  .guesses li.fresh { animation: shake .4s; }
+  @keyframes shake { 20%, 60% { translate: -6px 0; } 40%, 80% { translate: 6px 0; } }
+  .answer-msg { margin: 0; min-height: 1.3em; font-weight: 600; font-size: .9rem; }
+
+  .reveal { display: grid; gap: 4px; margin-top: 16px; }
+  .rv-verdict { margin: 0; font-size: .85rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+  .rv-player {
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 8vw, 3rem);
+    font-weight: 700;
+    line-height: 1.05;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .rv-yards { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .board { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; text-align: left; }
+  .board li.top { background: color-mix(in srgb, currentColor 24%, transparent); }
+  .b-rank { flex: none; width: 2.2ch; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; text-align: right; }
+  .b-name { flex: 1; min-width: 0; display: grid; }
+  .b-name strong { font-weight: 600; overflow-wrap: anywhere; }
+  .b-name small { font-size: .78rem; opacity: .85; }
+  .b-yds { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .b-tag {
+    flex: none; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px; border: 1.5px solid currentColor;
+  }
+  .p-pts { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--good); }
+  .p-pts.zero { color: var(--muted); }
+
+  dialog.result { max-height: calc(100dvh - 24px); overflow-y: auto; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="team-band" aria-hidden="true"></div>
+    <h1>Franchise Leaders</h1>
+    <p class="sub">Spin for a team, then name its all-time leader. Fewer guesses, more points.</p>
+  </header>
+
+  <main class="stage">
+    <!-- Setup: shown before a game starts -->
+    <section class="setup" id="setup" aria-label="Game settings">
+      <fieldset class="segmented" id="mode-set">
+        <legend class="sr-only">Game mode</legend>
+        <!-- filled from MODES -->
+      </fieldset>
+      <p class="rules" id="rules"></p>
+      <button class="btn btn-primary" id="start" type="button">Start game</button>
+      <p class="notice" id="data-notice" hidden>
+        Self-check mode: no player data is loaded yet, so after each guess you mark it right or
+        wrong yourself. Adding seasons to <code>PLAYER_SEASONS</code> turns on automatic checking,
+        rank clues and the leaderboard reveal.
+      </p>
+    </section>
+
+    <!-- Scoreboard: shown during a game -->
+    <section class="scoreboard" id="scoreboard" aria-label="Scoreboard" hidden>
+      <div class="sb-top">
+        <p class="sb-mode" id="sb-mode"></p>
+        <div class="sb-stats">
+          <div class="sb-stat"><span>Questions</span><div class="pips" id="pips" role="img"></div></div>
+          <div class="sb-stat"><span>Re-spins</span><span id="sb-respins"></span></div>
+          <button class="btn btn-small" id="quit" type="button">New game</button>
+        </div>
+      </div>
+      <p class="sb-total"><span id="sb-total">0</span> <span class="sb-of">/ <span id="sb-max"></span> pts</span></p>
+      <ol class="steps" id="steps" aria-label="Gauntlet progress" hidden></ol>
+      <p class="sb-need" id="sb-need"></p>
+    </section>
+
+    <div class="wheel-wrap">
+      <div class="pointer" aria-hidden="true"></div>
+      <div class="rotor" id="rotor">
+        <svg id="wheel" viewBox="0 0 400 400" role="img" aria-label="Spinner wheel"></svg>
+      </div>
+      <button class="hub" id="hub" type="button" aria-label="Spin the wheel" disabled>SPIN</button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </main>
+
+  <details class="history" id="history">
+    <summary>Results</summary>
+    <ol class="picks" id="picks"></ol>
+  </details>
+</div>
+
+<p id="live" class="sr-only" aria-live="polite"></p>
+
+<!-- Turn: team landed → guess the leader → reveal -->
+<dialog class="result" id="turn" aria-labelledby="t-name">
+  <div class="r-stripe" aria-hidden="true"></div>
+  <div class="r-body">
+    <p class="r-label" id="t-label"></p>
+    <p class="r-city" id="t-city"></p>
+    <h2 class="r-name" id="t-name"></h2>
+    <p class="r-prompt" id="t-prompt"></p>
+
+    <!-- Asking: not a <form>, since sandboxed hosts block form submission. -->
+    <div class="answer" id="ask-pane">
+      <div>
+        <div class="g-dots" id="g-dots" aria-hidden="true"></div>
+        <p class="g-dots-label" id="g-dots-label"></p>
+      </div>
+      <ol class="guesses" id="guesses" aria-label="Your guesses so far"></ol>
+      <label class="sr-only" for="answer">Player name</label>
+      <input id="answer" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" placeholder="Player name">
+      <p class="answer-msg" id="answer-msg" role="status"></p>
+      <p class="answer-help">Full name. Capitals, accents, Jr./Sr. and small typos don't matter.</p>
+      <div class="r-actions">
+        <button class="btn btn-team" id="submit" type="button">Lock it in</button>
+        <button class="btn btn-ghost" id="respin" type="button"></button>
+        <button class="btn btn-ghost" id="giveup" type="button">Give up</button>
+      </div>
+    </div>
+
+    <!-- Self-check (no data loaded) -->
+    <div class="answer" id="check-pane" hidden>
+      <p class="r-prompt" id="check-q"></p>
+      <p class="answer-help">Check the team's franchise leaders page on Pro Football Reference.</p>
+      <div class="r-actions">
+        <button class="btn btn-team" id="check-yes" type="button">Yes, correct</button>
+        <button class="btn btn-ghost" id="check-no" type="button">No</button>
+      </div>
+    </div>
+
+    <!-- Reveal -->
+    <div class="reveal" id="reveal-pane" hidden>
+      <p class="rv-verdict" id="rv-verdict"></p>
+      <p class="rv-player" id="rv-player"></p>
+      <p class="rv-yards" id="rv-yards"></p>
+      <ol class="board" id="board" aria-label="Franchise leaderboard"></ol>
+      <div class="r-actions">
+        <button class="btn btn-team" id="next" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+  <div class="r-stripe" aria-hidden="true"></div>
+</dialog>
+
+<!-- End of game -->
+<dialog class="summary" id="summary" aria-labelledby="s-title">
+  <p class="s-kicker" id="s-kicker"></p>
+  <h2 class="s-title" id="s-title"></h2>
+  <p class="s-detail" id="s-detail"></p>
+  <ol class="picks" id="s-picks"></ol>
+  <div class="r-actions">
+    <button class="btn btn-primary" id="again" type="button">Play again</button>
+    <button class="btn" id="settings" type="button">Change mode</button>
+  </div>
+</dialog>
+
+<script type="module">
+// ======================================================================
+// PLAYER DATA (add yours here)
+// ======================================================================
+/*
+  Same format as Yardage Spinner, plus passYds. One row per player, per team, per season:
+
+    {
+      player:   "Peyton Manning",  // display name, also what users type
+      team:     "IND",             // team abbreviation (see TEAMS below; common PFR codes like
+                                   // "GNB", "KAN", "OAK", "SDG", "STL" are mapped via TEAM_ALIASES)
+      year:     2004,
+      passYds:  4557,              // passing yards for that team that season (0 if none)
+      rushYds:  38,                // rushing yards (0 if none)
+      recYds:   0,                 // receiving yards (0 if none)
+
+      // optional
+      playerId: "MannPe00",        // REQUIRED when two players share a name; same id = same player
+      aliases:  ["The Sheriff"],   // extra names that count as a correct answer
+    }
+
+  Franchise totals are the sum of a player's seasons for that franchise, so the leaderboards are
+  only as complete as the seasons you load. For a franchise's true all-time leader you need every
+  season that player had with them (and every serious challenger's seasons too).
+
+  Notes for Pro Football Reference exports:
+  - Leave out the combined "2TM"/"3TM" rows for traded players; keep the per-team rows.
+  - Old franchise codes collide with current ones: "HOU" before 1997 is the Oilers (use "TEN"),
+    and "BAL" before 1984 is the Colts (use "IND"). Fix those rows before adding them.
+  - Relocated teams count as one franchise (Oilers → Titans, Rams STL/LA, Raiders OAK/LA/LV,
+    Chargers SD/LA, Cardinals STL/PHO/ARI, Colts BAL/IND). The Browns/Ravens split follows the
+    NFL's record keeping: pre-1996 Browns stats belong to CLE.
+*/
+const PLAYER_SEASONS = [
+  // { player: "Example Player", team: "BUF", year: 2020, passYds: 4000, rushYds: 300, recYds: 0 },
+];
+
+// ======================================================================
+// Game config
+// ======================================================================
+const GUESSES_PER_QUESTION = 3;
+const POINTS_BY_GUESS = [3, 2, 1];   // points for getting it on guess 1, 2, 3
+const RESPINS_PER_GAME = 1;
+const QUESTIONS_PER_CATEGORY_ROUND = 5;
+const REMOVE_USED_TEAMS = true;      // a team leaves the wheel once it's been asked about
+const BOARD_SIZE = 5;                // leaderboard rows shown on the reveal
+
+const STATS = {
+  pass: { label: "Passing",   key: "passYds", noun: "passing" },
+  rush: { label: "Rushing",   key: "rushYds", noun: "rushing" },
+  rec:  { label: "Receiving", key: "recYds",  noun: "receiving" },
+};
+
+const MODES = {
+  pass:     { label: "Passing",   questions: Array(QUESTIONS_PER_CATEGORY_ROUND).fill("pass") },
+  rush:     { label: "Rushing",   questions: Array(QUESTIONS_PER_CATEGORY_ROUND).fill("rush") },
+  rec:      { label: "Receiving", questions: Array(QUESTIONS_PER_CATEGORY_ROUND).fill("rec") },
+  gauntlet: { label: "Gauntlet",  questions: ["pass", "rush", "rec"], gauntlet: true },
+};
+
+// ======================================================================
+// Teams
+// ======================================================================
+const TEAMS = [
+  ["Buffalo", "Bills", "BUF", "AFC", "East", "#00338D", "#C60C30"],
+  ["Miami", "Dolphins", "MIA", "AFC", "East", "#008E97", "#FC4C02"],
+  ["New England", "Patriots", "NE", "AFC", "East", "#002244", "#C60C30"],
+  ["New York", "Jets", "NYJ", "AFC", "East", "#125740", "#FFFFFF"],
+  ["Baltimore", "Ravens", "BAL", "AFC", "North", "#241773", "#9E7C0C"],
+  ["Cincinnati", "Bengals", "CIN", "AFC", "North", "#FB4F14", "#000000"],
+  ["Cleveland", "Browns", "CLE", "AFC", "North", "#311D00", "#FF3C00"],
+  ["Pittsburgh", "Steelers", "PIT", "AFC", "North", "#FFB612", "#101820"],
+  ["Houston", "Texans", "HOU", "AFC", "South", "#03202F", "#A71930"],
+  ["Indianapolis", "Colts", "IND", "AFC", "South", "#002C5F", "#A2AAAD"],
+  ["Jacksonville", "Jaguars", "JAX", "AFC", "South", "#006778", "#D7A22A"],
+  ["Tennessee", "Titans", "TEN", "AFC", "South", "#0C2340", "#4B92DB"],
+  ["Denver", "Broncos", "DEN", "AFC", "West", "#FB4F14", "#002244"],
+  ["Kansas City", "Chiefs", "KC", "AFC", "West", "#E31837", "#FFB81C"],
+  ["Las Vegas", "Raiders", "LV", "AFC", "West", "#000000", "#A5ACAF"],
+  ["Los Angeles", "Chargers", "LAC", "AFC", "West", "#0080C6", "#FFC20E"],
+  ["Dallas", "Cowboys", "DAL", "NFC", "East", "#003594", "#869397"],
+  ["New York", "Giants", "NYG", "NFC", "East", "#0B2265", "#A71930"],
+  ["Philadelphia", "Eagles", "PHI", "NFC", "East", "#004C54", "#A5ACAF"],
+  ["Washington", "Commanders", "WAS", "NFC", "East", "#5A1414", "#FFB612"],
+  ["Chicago", "Bears", "CHI", "NFC", "North", "#0B162A", "#C83803"],
+  ["Detroit", "Lions", "DET", "NFC", "North", "#0076B6", "#B0B7BC"],
+  ["Green Bay", "Packers", "GB", "NFC", "North", "#203731", "#FFB612"],
+  ["Minnesota", "Vikings", "MIN", "NFC", "North", "#4F2683", "#FFC62F"],
+  ["Atlanta", "Falcons", "ATL", "NFC", "South", "#A71930", "#000000"],
+  ["Carolina", "Panthers", "CAR", "NFC", "South", "#0085CA", "#101820"],
+  ["New Orleans", "Saints", "NO", "NFC", "South", "#D3BC8D", "#101820"],
+  ["Tampa Bay", "Buccaneers", "TB", "NFC", "South", "#D50A0A", "#34302B"],
+  ["Arizona", "Cardinals", "ARI", "NFC", "West", "#97233F", "#000000"],
+  ["Los Angeles", "Rams", "LAR", "NFC", "West", "#003594", "#FFA300"],
+  ["San Francisco", "49ers", "SF", "NFC", "West", "#AA0000", "#B3995D"],
+  ["Seattle", "Seahawks", "SEA", "NFC", "West", "#002244", "#69BE28"],
+].map(([city, name, abbr, conference, division, primary, secondary]) =>
+  Object.freeze({ city, name, abbr, conference, division, primary, secondary }));
+
+const TEAM_BY_ABBR = new Map(TEAMS.map((t) => [t.abbr, t]));
+
+/** Other codes (mostly Pro Football Reference's) mapped to the franchise abbreviations above. */
+const TEAM_ALIASES = {
+  GNB: "GB", KAN: "KC", NWE: "NE", NOR: "NO", SFO: "SF", TAM: "TB",
+  LVR: "LV", OAK: "LV", RAI: "LV", LAI: "LV",
+  SDG: "LAC", SD: "LAC", SDC: "LAC",
+  STL: "LAR", RAM: "LAR", LA: "LAR",
+  PHO: "ARI", CRD: "ARI",
+  OTI: "TEN", OIL: "TEN", CLT: "IND", RAV: "BAL", HTX: "HOU",
+  WSH: "WAS", JAC: "JAX",
+};
+
+function normalizeTeam(code) {
+  const c = String(code ?? "").trim().toUpperCase();
+  if (TEAM_BY_ABBR.has(c)) return c;
+  return TEAM_ALIASES[c] ?? null;
+}
+
+// ======================================================================
+// Player index + name matching
+// ======================================================================
+const SUFFIXES = new Set(["jr", "sr", "ii", "iii", "iv", "v"]);
+
+/** "Amon-Ra St. Brown" → "amonrastbrown"; "Odell Beckham Jr." → "odellbeckham". */
+function normalizeName(s) {
+  return String(s ?? "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[.,'’`"]/g, "")
+    .split(/[\s\-_]+/)
+    .filter((tok) => tok && !SUFFIXES.has(tok))
+    .join("")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/** How many typos to forgive for a name of this length. */
+function typoTolerance(q) {
+  return q.length <= 5 ? 0 : q.length <= 10 ? 1 : 2;
+}
+
+/** key → { key, name, keys: Set<normalized name>, seasons: [{ team, year, passYds, rushYds, recYds }] } */
+const PLAYERS = new Map();
+
+function buildIndex(rows) {
+  rows.forEach((row, i) => {
+    const team = normalizeTeam(row.team);
+    const year = Number(row.year);
+    const norm = normalizeName(row.player);
+    if (!team || !norm || !Number.isInteger(year)) {
+      console.warn(`PLAYER_SEASONS[${i}] skipped (bad player, team or year):`, row);
+      return;
+    }
+    const key = row.playerId ? `id:${row.playerId}` : `n:${norm}`;
+    let p = PLAYERS.get(key);
+    if (!p) {
+      p = { key, name: String(row.player).trim(), keys: new Set(), seasons: [] };
+      PLAYERS.set(key, p);
+    }
+    p.keys.add(norm);
+    for (const alias of row.aliases ?? []) {
+      const a = normalizeName(alias);
+      if (a) p.keys.add(a);
+    }
+    p.seasons.push({
+      team, year,
+      passYds: Number(row.passYds) || 0,
+      rushYds: Number(row.rushYds) || 0,
+      recYds: Number(row.recYds) || 0,
+    });
+  });
+}
+
+/** Players whose name matches `q`: exact matches first, otherwise the closest within typo tolerance. */
+function matchPlayers(q, players) {
+  if (!q) return [];
+  const exact = players.filter((p) => p.keys.has(q));
+  if (exact.length) return exact;
+  const tol = typoTolerance(q);
+  if (tol === 0) return [];
+  let best = Infinity, found = [];
+  for (const p of players) {
+    let d = Infinity;
+    for (const k of p.keys) d = Math.min(d, levenshtein(q, k));
+    if (d > tol) continue;
+    if (d < best) { best = d; found = [p]; }
+    else if (d === best) found.push(p);
+  }
+  return found;
+}
+
+/**
+ * A franchise's career leaderboard for one stat, best first:
+ * [{ player, yards, from, to, rank }]. Ties share a rank. Cached.
+ */
+const boardCache = new Map();
+function franchiseBoard(teamAbbr, statKey) {
+  const cacheKey = `${teamAbbr}|${statKey}`;
+  if (boardCache.has(cacheKey)) return boardCache.get(cacheKey);
+  const rows = [];
+  for (const player of PLAYERS.values()) {
+    let yards = 0, from = Infinity, to = -Infinity;
+    for (const s of player.seasons) {
+      if (s.team !== teamAbbr || !s[statKey]) continue;
+      yards += s[statKey];
+      from = Math.min(from, s.year);
+      to = Math.max(to, s.year);
+    }
+    if (yards > 0) rows.push({ player, yards, from, to });
+  }
+  rows.sort((a, b) => b.yards - a.yards || a.player.name.localeCompare(b.player.name));
+  rows.forEach((r, i) => { r.rank = i > 0 && r.yards === rows[i - 1].yards ? rows[i - 1].rank : i + 1; });
+  boardCache.set(cacheKey, rows);
+  return rows;
+}
+
+/**
+ * Check a typed guess against the franchise leaderboard.
+ * Returns { kind: "correct" | "ranked" | "noStat" | "notFound", player?, entry? }.
+ */
+function checkGuess(input, teamAbbr, statKey) {
+  const q = normalizeName(input);
+  const board = franchiseBoard(teamAbbr, statKey);
+  // Match against this franchise's list first so typos resolve to the plausible player.
+  const matches = matchPlayers(q, board.map((r) => r.player));
+  if (matches.length) {
+    const entries = board.filter((r) => matches.includes(r.player));
+    const entry = entries.reduce((a, b) => (b.rank < a.rank ? b : a));
+    return { kind: entry.rank === 1 ? "correct" : "ranked", player: entry.player, entry };
+  }
+  const elsewhere = matchPlayers(q, [...PLAYERS.values()]);
+  return elsewhere.length ? { kind: "noStat", player: elsewhere[0] } : { kind: "notFound" };
+}
+
+// ======================================================================
+// Helpers
+// ======================================================================
+const C = 200;     // wheel center (SVG units)
+const R = 192;     // slice radius
+
+const num = new Intl.NumberFormat();
+const fmt = (n) => num.format(n);
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : /(s|sh|ch|x)$/.test(word) ? "es" : "s"}`;
+const years = (r) => (r.from === r.to ? String(r.from) : `${r.from}–${r.to}`);
+const ordinal = (n) => {
+  const s = ["th", "st", "nd", "rd"], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
+function polar(r, deg) {
+  const rad = (deg * Math.PI) / 180;
+  return { x: C + r * Math.sin(rad), y: C - r * Math.cos(rad) };
+}
+function arcPath(r, a0, a1) {
+  const p0 = polar(r, a0), p1 = polar(r, a1);
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M ${p0.x} ${p0.y} A ${r} ${r} 0 ${large} 1 ${p1.x} ${p1.y}`;
+}
+function slicePath(r, a0, a1) {
+  return `M ${C} ${C} L ${arcPath(r, a0, a1).slice(2)} Z`;
+}
+
+function relativeLuminance(hex) {
+  const v = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4]
+    .map((i) => parseInt(v.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrastRatio(a, b) {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+function contrastText(hex) {
+  return contrastRatio(hex, "#FFFFFF") >= contrastRatio(hex, "#000000") ? "#FFFFFF" : "#000000";
+}
+
+/** Uniform integer in [0, n), crypto-backed with rejection sampling (no modulo bias). */
+function secureRandomInt(n) {
+  if (!Number.isInteger(n) || n < 1) throw new RangeError("n must be a positive integer");
+  const RANGE = 2 ** 32;
+  const limit = RANGE - (RANGE % n);
+  const buf = new Uint32Array(1);
+  let v;
+  do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+  return v % n;
+}
+function secureRandomFloat() {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0] / 2 ** 32;
+}
+
+// ======================================================================
+// State
+// ======================================================================
+const state = {
+  phase: "setup",         // setup | spin | spinning | answer | over
+  mode: "gauntlet",
+  rotation: 0,
+  qIndex: 0,              // current question number (0-based)
+  respinsLeft: RESPINS_PER_GAME,
+  score: 0,
+  usedTeams: new Set(),   // abbrs removed from the wheel
+  results: [],            // [{ team, stat, guesses, solvedOn, points, leader }]
+  currentTeam: null,
+  guesses: [],            // this question: [{ input, playerKey, clue }]
+  pendingGuess: null,     // self-check mode: the guess awaiting yes/no
+};
+
+/** Self-check mode: no player data loaded, so the player marks each guess themselves. */
+let manual = false;
+
+const mode = () => MODES[state.mode];
+const questions = () => mode().questions;
+const maxPoints = () => questions().length * POINTS_BY_GUESS[0];
+const currentStat = () => STATS[questions()[state.qIndex]];
+
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+const $ = (sel) => document.querySelector(sel);
+const els = {
+  setup: $("#setup"), modeSet: $("#mode-set"), rules: $("#rules"),
+  start: $("#start"), dataNotice: $("#data-notice"),
+  scoreboard: $("#scoreboard"), sbMode: $("#sb-mode"), pips: $("#pips"), sbRespins: $("#sb-respins"),
+  sbTotal: $("#sb-total"), sbMax: $("#sb-max"), steps: $("#steps"), sbNeed: $("#sb-need"), quit: $("#quit"),
+  svg: $("#wheel"), rotor: $("#rotor"), hub: $("#hub"), hint: $("#hint"),
+  details: $("#history"), picks: $("#picks"), live: $("#live"),
+  turn: $("#turn"), tLabel: $("#t-label"), tCity: $("#t-city"), tName: $("#t-name"), tPrompt: $("#t-prompt"),
+  askPane: $("#ask-pane"), gDots: $("#g-dots"), gDotsLabel: $("#g-dots-label"), guesses: $("#guesses"),
+  answer: $("#answer"), answerMsg: $("#answer-msg"), submit: $("#submit"), respin: $("#respin"), giveup: $("#giveup"),
+  checkPane: $("#check-pane"), checkQ: $("#check-q"), checkYes: $("#check-yes"), checkNo: $("#check-no"),
+  revealPane: $("#reveal-pane"), rvVerdict: $("#rv-verdict"), rvPlayer: $("#rv-player"),
+  rvYards: $("#rv-yards"), board: $("#board"), next: $("#next"),
+  summary: $("#summary"), sKicker: $("#s-kicker"), sTitle: $("#s-title"),
+  sDetail: $("#s-detail"), sPicks: $("#s-picks"), again: $("#again"), settings: $("#settings"),
+};
+
+// ======================================================================
+// Rendering
+// ======================================================================
+function availableTeams() {
+  return TEAMS.filter((t) => !state.usedTeams.has(t.abbr));
+}
+
+function renderWheel({ animate = false } = {}) {
+  const teams = availableTeams();
+  const n = teams.length;
+  const step = 360 / n;
+  const useNames = n <= 16;
+  const fontSize = n > 8 ? 16 : n > 4 ? 20 : 22;
+
+  let svg = `<circle cx="${C}" cy="${C}" r="${R + 6}" fill="var(--text)"/>`;
+  teams.forEach((t, i) => {
+    const a0 = i * step, a1 = (i + 1) * step, mid = a0 + step / 2;
+    const label = (useNames ? t.name : t.abbr).toUpperCase();
+    svg += `
+      <path d="${slicePath(R, a0, a1)}" fill="${t.primary}" stroke="rgb(0 0 0 / .28)" stroke-width="1"/>
+      <path d="${arcPath(R - 4, a0, a1)}" fill="none" stroke="${t.secondary}" stroke-width="8"/>
+      <text transform="rotate(${mid} ${C} ${C}) translate(${C} ${C - R * 0.89}) rotate(-90)"
+            text-anchor="end" dominant-baseline="central"
+            font-size="${fontSize}" fill="${contrastText(t.primary)}">${label}</text>`;
+  });
+  svg += `<circle cx="${C}" cy="${C}" r="52" fill="var(--surface)"/>`;
+  els.svg.innerHTML = svg;
+  els.svg.setAttribute("aria-label", `Spinner wheel with ${n} teams left`);
+
+  if (animate && !reducedMotion.matches) {
+    els.svg.animate(
+      [{ opacity: 0, transform: "scale(.94)" }, { opacity: 1, transform: "scale(1)" }],
+      { duration: 280, easing: "ease-out" });
+  }
+}
+
+function renderRules() {
+  const m = mode();
+  const pts = POINTS_BY_GUESS.slice(0, GUESSES_PER_QUESTION).join("/");
+  els.rules.textContent = m.gauntlet
+    ? `Three spins: name the team's all-time passing leader, then rushing, then receiving. ` +
+      `${GUESSES_PER_QUESTION} guesses each, worth ${pts} points.`
+    : `${m.questions.length} spins: name each team's all-time ${STATS[m.questions[0]].noun} yards leader. ` +
+      `${GUESSES_PER_QUESTION} guesses each, worth ${pts} points.`;
+}
+
+function renderScoreboard() {
+  const qs = questions();
+  els.sbMode.textContent = mode().gauntlet ? "Gauntlet" : `${mode().label} leaders`;
+  els.sbTotal.textContent = fmt(state.score);
+  els.sbMax.textContent = fmt(maxPoints());
+
+  els.pips.replaceChildren(...qs.map((_, i) => {
+    const pip = document.createElement("span");
+    const r = state.results[i];
+    pip.className = "pip " + (r ? (r.solvedOn ? "hit" : "miss") : i === state.qIndex && state.phase !== "over" ? "current" : "todo");
+    return pip;
+  }));
+  els.pips.setAttribute("aria-label", `Question ${Math.min(state.qIndex + 1, qs.length)} of ${qs.length}`);
+  els.sbRespins.textContent = String(state.respinsLeft);
+
+  els.steps.hidden = !mode().gauntlet;
+  if (mode().gauntlet) {
+    els.steps.replaceChildren(...qs.map((s, i) => {
+      const li = document.createElement("li");
+      const r = state.results[i];
+      li.className = r ? (r.solvedOn ? "hit" : "miss") : i === state.qIndex && state.phase !== "over" ? "current" : "";
+      li.textContent = `${r ? (r.solvedOn ? "✓ " : "✗ ") : ""}${STATS[s].label}`;
+      if (li.className === "current") li.setAttribute("aria-current", "step");
+      return li;
+    }));
+  }
+
+  els.sbNeed.textContent = state.phase === "over" ? "Round complete."
+    : `Up next: ${currentStat().noun} yards leader · question ${state.qIndex + 1} of ${qs.length}`;
+}
+
+function resultItem(res) {
+  const team = TEAM_BY_ABBR.get(res.team);
+  const li = document.createElement("li");
+  const chip = document.createElement("span");
+  chip.className = "chip";
+  chip.setAttribute("aria-hidden", "true");
+  chip.style.setProperty("--p", team.primary);
+  chip.style.setProperty("--s", team.secondary);
+
+  const main = document.createElement("span");
+  main.className = "p-main";
+  const name = document.createElement("span");
+  name.className = "p-name";
+  const sub = document.createElement("span");
+  sub.className = "p-sub";
+  const leaderName = res.leader?.player.name;
+  name.textContent = leaderName ?? (res.solvedOn ? res.guesses.at(-1).input : "Unrevealed");
+  const how = res.solvedOn ? `got it on guess ${res.solvedOn}`
+    : res.guesses.length ? "missed" : "gave up";
+  sub.textContent = `${team.name} · ${STATS[res.stat].label} · ${how}`;
+  main.append(name, sub);
+
+  const pts = document.createElement("span");
+  pts.className = "p-pts" + (res.points ? "" : " zero");
+  pts.textContent = `+${res.points}`;
+  li.append(chip, main, pts);
+  return li;
+}
+
+function renderPicks({ flashNewest = false } = {}) {
+  if (!state.results.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = state.phase === "setup" ? "Start a game to see results here." : "Spin for your first team.";
+    els.picks.replaceChildren(li);
+    return;
+  }
+  els.picks.replaceChildren(...state.results.map(resultItem));
+  if (flashNewest) els.picks.lastElementChild?.classList.add("flash");
+}
+
+function renderPhase() {
+  const inGame = state.phase !== "setup";
+  els.setup.hidden = inGame;
+  els.scoreboard.hidden = !inGame;
+  els.hub.disabled = state.phase !== "spin";
+  els.hub.setAttribute("aria-busy", String(state.phase === "spinning"));
+  els.hint.innerHTML =
+    state.phase === "setup" ? "Choose a mode, then start." :
+    state.phase === "spin" ? "Press <kbd>Space</kbd> or <kbd>Enter</kbd>, or tap SPIN." :
+    state.phase === "over" ? "Round over. Start a new game to play again." : "";
+}
+
+function announce(text) {
+  els.live.textContent = "";
+  requestAnimationFrame(() => { els.live.textContent = text; });
+}
+
+function applyTeamTheme(team) {
+  const root = document.documentElement.style;
+  root.setProperty("--team-primary", team.primary);
+  root.setProperty("--team-secondary", team.secondary);
+  root.setProperty("--team-text", contrastText(team.primary));
+  root.setProperty("--team-accent-text", contrastText(team.secondary));
+}
+
+/** Guess dots + the list of wrong guesses with their clues. */
+function renderGuesses({ fresh = false } = {}) {
+  const used = state.guesses.length;
+  els.gDots.replaceChildren(...Array.from({ length: GUESSES_PER_QUESTION }, (_, i) => {
+    const d = document.createElement("span");
+    d.className = "g-dot" + (i < used ? " used" : "");
+    return d;
+  }));
+  const left = GUESSES_PER_QUESTION - used;
+  els.gDotsLabel.textContent =
+    `${plural(left, "guess")} left · worth ${plural(POINTS_BY_GUESS[used] ?? 0, "point")}`;
+
+  els.guesses.replaceChildren(...state.guesses.map((g, i) => {
+    const li = document.createElement("li");
+    const x = document.createElement("span");
+    x.className = "g-x"; x.textContent = "✗"; x.setAttribute("aria-hidden", "true");
+    const n = document.createElement("span");
+    n.className = "g-name"; n.textContent = g.display;
+    const c = document.createElement("span");
+    c.className = "g-clue"; c.textContent = g.clue;
+    li.append(x, n, c);
+    if (fresh && i === used - 1) li.classList.add("fresh");
+    return li;
+  }));
+  els.guesses.hidden = used === 0;
+}
+
+function showPane(which) {
+  els.askPane.hidden = which !== "ask";
+  els.checkPane.hidden = which !== "check";
+  els.revealPane.hidden = which !== "reveal";
+}
+
+// ======================================================================
+// Game flow
+// ======================================================================
+function readSettings() {
+  state.mode = document.querySelector('input[name="mode"]:checked').value;
+}
+
+function startGame() {
+  readSettings();
+  Object.assign(state, {
+    phase: "spin", qIndex: 0, respinsLeft: RESPINS_PER_GAME, score: 0,
+    usedTeams: new Set(), results: [], currentTeam: null, guesses: [], pendingGuess: null,
+  });
+  if (els.summary.open) els.summary.close();
+  renderWheel({ animate: true });
+  renderScoreboard();
+  renderPicks();
+  renderPhase();
+  els.hub.focus();
+  announce(`New game: ${mode().label}. Spin for your first team.`);
+}
+
+function backToSetup() {
+  if (state.phase === "spinning") return;
+  if (els.turn.open) els.turn.close();
+  if (els.summary.open) els.summary.close();
+  Object.assign(state, { phase: "setup", usedTeams: new Set(), results: [], currentTeam: null });
+  renderWheel({ animate: true });
+  renderPicks();
+  renderPhase();
+  els.start.focus();
+}
+
+async function spin() {
+  if (state.phase !== "spin") return;
+  const teams = availableTeams();
+  const n = teams.length;
+  const step = 360 / n;
+
+  // Pick the winner first; the animation only shows a decision already made.
+  const index = secureRandomInt(n);
+  const winner = teams[index];
+  const landing = index * step + step * (0.15 + 0.7 * secureRandomFloat());
+
+  // Rotor rotated by `rot` shows wheel angle `a` at screen angle a + rot; the pointer is at 0.
+  const targetRot = (360 - (landing % 360)) % 360;
+  const current = ((state.rotation % 360) + 360) % 360;
+  const delta = (targetRot - current + 360) % 360;
+
+  const reduce = reducedMotion.matches;
+  const turns = reduce ? 1 : 5 + secureRandomInt(3);
+  const duration = reduce ? 600 : 4500 + secureRandomInt(1500);
+  const to = current + turns * 360 + delta;
+
+  state.phase = "spinning";
+  renderPhase();
+  const anim = els.rotor.animate(
+    [{ transform: `rotate(${current}deg)` }, { transform: `rotate(${to}deg)` }],
+    { duration, easing: "cubic-bezier(0.12, 0.8, 0.18, 1)", fill: "forwards" });
+  try { await anim.finished; } catch { /* cancelled */ }
+
+  state.rotation = to % 360;
+  els.rotor.style.transform = `rotate(${state.rotation}deg)`;
+  anim.cancel();
+
+  state.currentTeam = winner;
+  if (REMOVE_USED_TEAMS) state.usedTeams.add(winner.abbr);
+  openTurn(winner);
+}
+
+function openTurn(team) {
+  state.phase = "answer";
+  state.guesses = [];
+  state.pendingGuess = null;
+  renderPhase();
+  applyTeamTheme(team);
+  const s = currentStat();
+  els.tLabel.textContent = `Question ${state.qIndex + 1} of ${questions().length} · ${s.label}`;
+  els.tCity.textContent = team.city;
+  els.tName.textContent = team.name;
+  els.tPrompt.textContent = `Who has the most ${s.noun} yards in ${team.name} history?`;
+  els.answer.value = "";
+  els.answerMsg.textContent = "";
+  renderGuesses();
+  updateRespinButton();
+  showPane("ask");
+  els.turn.showModal();
+  els.answer.focus();
+  announce(`${team.city} ${team.name}. Name the all-time ${s.noun} yards leader.`);
+}
+
+/** Re-spinning is only allowed before the first guess on a team. */
+function updateRespinButton() {
+  els.respin.textContent = `Re-spin (${state.respinsLeft})`;
+  els.respin.disabled = state.respinsLeft < 1 || state.guesses.length > 0;
+}
+
+function lockIn() {
+  if (state.phase !== "answer" || els.askPane.hidden) return;
+  const input = els.answer.value.trim();
+  if (!input) { els.answer.focus(); return; }
+  const team = state.currentTeam;
+  const s = currentStat();
+
+  if (manual) {
+    if (state.guesses.some((g) => normalizeName(g.input) === normalizeName(input))) {
+      els.answerMsg.textContent = "You already guessed that.";
+      return;
+    }
+    state.pendingGuess = input;
+    // Every team name is plural, so the possessive is just an apostrophe.
+    els.checkQ.textContent = `Is ${input} the ${team.name}' all-time ${s.noun} yards leader?`;
+    showPane("check");
+    els.checkYes.focus();
+    return;
+  }
+
+  const res = checkGuess(input, team.abbr, s.key);
+  if (res.player && state.guesses.some((g) => g.playerKey === res.player.key)) {
+    els.answerMsg.textContent = `You already guessed ${res.player.name}.`;
+    els.answer.select();
+    return;
+  }
+  if (res.kind === "correct") return finishQuestion(true, input, res.player);
+
+  const clue =
+    res.kind === "ranked" ? `${ordinal(res.entry.rank)} · ${fmt(res.entry.yards)} yds` :
+    res.kind === "noStat" ? `no ${s.noun} yds with ${team.name}` :
+    "not in the player data";
+  recordMiss(input, res.player, clue);
+}
+
+function recordMiss(input, player, clue) {
+  state.guesses.push({ input, display: player?.name ?? input, playerKey: player?.key ?? null, clue });
+  els.answer.value = "";
+  els.answerMsg.textContent = "";
+  updateRespinButton();
+  if (state.guesses.length >= GUESSES_PER_QUESTION) return finishQuestion(false);
+  renderGuesses({ fresh: true });
+  showPane("ask");
+  els.answer.focus();
+  announce(`Not it. ${clue}. ${plural(GUESSES_PER_QUESTION - state.guesses.length, "guess")} left.`);
+}
+
+function selfCheck(correct) {
+  if (state.pendingGuess == null) return;
+  const input = state.pendingGuess;
+  state.pendingGuess = null;
+  if (correct) return finishQuestion(true, input, null);
+  recordMiss(input, null, "not the leader");
+}
+
+function giveUp() {
+  if (state.phase !== "answer") return;
+  finishQuestion(false);
+}
+
+function finishQuestion(solved, input = null, player = null) {
+  const team = state.currentTeam;
+  const statId = questions()[state.qIndex];
+  const s = STATS[statId];
+  if (solved) state.guesses.push({ input, display: player?.name ?? input, playerKey: player?.key ?? null, clue: "" });
+  const solvedOn = solved ? state.guesses.length : null;
+  const points = solved ? POINTS_BY_GUESS[solvedOn - 1] ?? 0 : 0;
+  const board = manual ? [] : franchiseBoard(team.abbr, s.key);
+  const leader = board[0] ?? null;
+
+  state.score += points;
+  state.results.push({ team: team.abbr, stat: statId, guesses: state.guesses.slice(), solvedOn, points, leader });
+
+  // Reveal
+  els.rvVerdict.textContent = solved
+    ? `Correct · +${plural(points, "point")}`
+    : state.guesses.length ? "Out of guesses" : "The answer";
+  if (leader) {
+    const coLeaders = board.filter((r) => r.rank === 1);
+    els.rvPlayer.textContent = coLeaders.map((r) => r.player.name).join(" & ");
+    els.rvYards.textContent = `${fmt(leader.yards)} ${s.noun} yards · ${years(leader)}`;
+  } else if (manual) {
+    els.rvPlayer.textContent = solved ? input : "Look it up";
+    els.rvYards.textContent = solved ? "" : "No player data loaded, so the answer can't be shown.";
+  } else {
+    els.rvPlayer.textContent = "No data";
+    els.rvYards.textContent = `No ${s.noun} seasons loaded for the ${team.name}.`;
+  }
+  renderBoard(board);
+  els.next.textContent = state.qIndex + 1 >= questions().length ? "See results" : "Next question";
+  showPane("reveal");
+  renderScoreboard();
+  renderPicks({ flashNewest: true });
+  els.next.focus();
+  announce(`${els.rvVerdict.textContent}. ${els.rvPlayer.textContent}. ${els.rvYards.textContent}`);
+}
+
+function renderBoard(board) {
+  const guessed = new Set(state.guesses.map((g) => g.playerKey).filter(Boolean));
+  const rows = board.slice(0, BOARD_SIZE);
+  // Also show any guessed player who ranks below the cutoff.
+  for (const r of board.slice(BOARD_SIZE)) if (guessed.has(r.player.key)) rows.push(r);
+  els.board.hidden = rows.length === 0;
+  els.board.replaceChildren(...rows.map((r) => {
+    const li = document.createElement("li");
+    if (r.rank === 1) li.classList.add("top");
+    const rank = document.createElement("span");
+    rank.className = "b-rank"; rank.textContent = String(r.rank);
+    const name = document.createElement("span");
+    name.className = "b-name";
+    const strong = document.createElement("strong");
+    strong.textContent = r.player.name;
+    const small = document.createElement("small");
+    small.textContent = years(r);
+    name.append(strong, small);
+    li.append(rank, name);
+    if (guessed.has(r.player.key)) {
+      const tag = document.createElement("span");
+      tag.className = "b-tag"; tag.textContent = "your guess";
+      li.append(tag);
+    }
+    const yds = document.createElement("span");
+    yds.className = "b-yds"; yds.textContent = fmt(r.yards);
+    li.append(yds);
+    return li;
+  }));
+}
+
+function nextQuestion() {
+  els.turn.close();
+  state.qIndex += 1;
+  if (state.qIndex >= questions().length) return showSummary();
+  state.phase = "spin";
+  renderWheel({ animate: true });
+  renderScoreboard();
+  renderPhase();
+  els.hub.focus();
+}
+
+function respin() {
+  if (state.phase !== "answer" || state.respinsLeft < 1 || state.guesses.length) return;
+  state.respinsLeft -= 1;
+  els.turn.close();
+  renderWheel({ animate: true });
+  renderScoreboard();
+  state.phase = "spin";
+  spin();
+}
+
+function showSummary() {
+  state.phase = "over";
+  renderPhase();
+  renderScoreboard();
+  renderWheel({ animate: true });
+  const max = maxPoints();
+  const solved = state.results.filter((r) => r.solvedOn).length;
+  const ratio = state.score / max;
+  els.sKicker.textContent = mode().gauntlet ? "Gauntlet" : `${mode().label} leaders`;
+  els.sTitle.textContent = ratio === 1 ? "Flawless" : ratio >= 0.6 ? "Strong run" : solved ? "Tough draw" : "Shut out";
+  els.sTitle.className = `s-title ${ratio >= 0.6 ? "win" : "loss"}`;
+  els.sDetail.textContent =
+    `${fmt(state.score)} of ${fmt(max)} points · ${solved} of ${plural(state.results.length, "question")} answered`;
+  els.sPicks.replaceChildren(...state.results.map(resultItem));
+  els.summary.showModal();
+  els.again.focus();
+  announce(`${els.sTitle.textContent}. ${els.sDetail.textContent}`);
+}
+
+// ======================================================================
+// Setup controls
+// ======================================================================
+function buildSegmented(fieldset, name, options, checked, describe) {
+  for (const [value, opt] of Object.entries(options)) {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "radio"; input.name = name; input.value = value; input.checked = value === checked;
+    const span = document.createElement("span");
+    span.textContent = opt.label;
+    const extra = describe?.(opt);
+    if (extra) {
+      const small = document.createElement("small");
+      small.textContent = extra;
+      span.append(small);
+    }
+    label.append(input, span);
+    fieldset.append(label);
+    input.addEventListener("change", () => { readSettings(); renderRules(); });
+  }
+}
+
+buildSegmented(els.modeSet, "mode", MODES, state.mode, (m) => `${m.questions.length} Qs`);
+
+// ======================================================================
+// Events
+// ======================================================================
+els.start.addEventListener("click", startGame);
+els.hub.addEventListener("click", spin);
+els.quit.addEventListener("click", backToSetup);
+
+els.submit.addEventListener("click", lockIn);
+els.answer.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" || e.isComposing) return;
+  e.preventDefault();
+  lockIn();
+});
+els.answer.addEventListener("input", () => { els.answerMsg.textContent = ""; });
+els.giveup.addEventListener("click", giveUp);
+els.respin.addEventListener("click", respin);
+els.checkYes.addEventListener("click", () => selfCheck(true));
+els.checkNo.addEventListener("click", () => selfCheck(false));
+els.next.addEventListener("click", nextQuestion);
+
+// Esc must not dismiss an unanswered turn.
+els.turn.addEventListener("cancel", (e) => e.preventDefault());
+
+els.again.addEventListener("click", startGame);
+els.settings.addEventListener("click", backToSetup);
+els.summary.addEventListener("cancel", (e) => { e.preventDefault(); backToSetup(); });
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== " " && e.key !== "Enter") return;
+  if (e.repeat || state.phase !== "spin" || els.turn.open || els.summary.open) return;
+  if (e.target.closest("button, input, select, textarea, summary, a, [contenteditable]")) return;
+  e.preventDefault();
+  spin();
+});
+
+// ======================================================================
+// Init
+// ======================================================================
+buildIndex(PLAYER_SEASONS);
+manual = PLAYERS.size === 0;
+els.dataNotice.hidden = !manual;
+readSettings();
+renderRules();
+renderWheel();
+renderPicks();
+renderPhase();
+els.details.open = true;
+</script>
+</body>
+</html>

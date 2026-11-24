@@ -1,0 +1,28 @@
+name: Hall of Records correction or addition
+description: Fix a record, champion, leader list, all-league team or famous team, or suggest a new list
+labels: ["area: hall-of-records"]
+body:
+  - type: dropdown
+    id: sport
+    attributes:
+      label: Sport
+      options: [Football, Basketball, Baseball, Hockey, Soccer, Tennis, MMA]
+    validations: {required: true}
+  - type: dropdown
+    id: tab
+    attributes:
+      label: Tab
+      options: [Records, Champions, Leaders, All-league team, Famous teams / rivalries / fights, New tab or list]
+    validations: {required: true}
+  - type: textarea
+    id: change
+    attributes:
+      label: What should change
+      description: What it says now, and what it should say.
+    validations: {required: true}
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A link that confirms the correction.
+    validations: {required: true}

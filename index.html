@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StatBattle Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/hall.css">
+<link rel="stylesheet" href="css/players.css">
+</head>
+<body>
+<header class="top">
+  <div class="logo" aria-label="StatBattle"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="5" width="2" height="3" fill="#fff"/><rect x="3" y="2" width="2" height="6" fill="#ff5a1f"/><rect x="6" y="0" width="2" height="8" fill="#fff"/></svg>Stat<b>Battle</b></div>
+  <div class="ctrls">
+    <div class="seg" role="group" aria-label="Player mode">
+      <button id="sp" aria-pressed="true">Single player</button>
+      <button id="mp" aria-pressed="false" disabled title="Multiplayer is coming soon">Multiplayer <span class="pill">Coming soon</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="band turf">
+  <div class="wrap">
+    <section class="view" id="v-home">
+      <div class="head">
+        <div>
+          <h1 tabindex="-1">Pick a game type</h1>
+          <p>Open a game type to see its modes, or go straight into Draft Mode. Then choose your sport.</p>
+        </div>
+      </div>
+      <div class="cats" id="cats"></div>
+      <h2 class="sub">Browse</h2>
+      <button class="hall" id="hallCard" aria-label="Hall of Records. Browse records, champions, leaders, all-league teams and famous teams for all 7 sports">
+        <span class="ic" id="hallIc"></span>
+        <span><h2>Hall of Records</h2><p>Records, every champion, stat leaders, all-league teams and famous teams, sport by sport.</p></span>
+        <span class="balls" id="hallBalls"></span>
+      </button>
+      <button class="hall" id="playersCard" aria-label="Player pages. Browse athlete pages with ratings, bios and stats">
+        <span class="ic ic-sil" id="playersIc"></span>
+        <span><h2>Player pages</h2><p>Every athlete in the game: preview rating, bio, career path, stats and where they show up in StatBattle.</p></span>
+        <span class="go-txt">Browse players &rarr;</span>
+      </button>
+    </section>
+
+    <section class="view" id="v-cat" hidden>
+      <button class="back" data-go="">&larr; All game types</button>
+      <div class="head">
+        <div>
+          <h1 id="catTitle" tabindex="-1"></h1>
+          <p id="catDesc"></p>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <p class="note">Play buttons point to placeholder routes until each game is built.</p>
+    </section>
+
+    <section class="view" id="v-hall" hidden>
+      <button class="back" data-go="">&larr; Home</button>
+      <div class="head">
+        <div>
+          <h1 tabindex="-1">Hall of Records</h1>
+          <p>Pick a sport, then browse its records, champions, stat leaders, all-league teams and famous teams.</p>
+        </div>
+      </div>
+      <div class="hpicks" id="hpicks" role="group" aria-label="Sport"></div>
+      <div class="htabs">
+        <div class="seg hseg" role="group" aria-label="Show" id="htabseg"></div>
+      </div>
+      <div class="hbox">
+        <div class="hban" id="hban"><span class="ball" id="hball"></span><div><h2 id="hname"></h2><div class="k" id="hk"></div></div></div>
+        <div class="hbody" id="hbody" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-players" hidden>
+      <button class="back" data-go="">&larr; Home</button>
+      <div class="head">
+        <div>
+          <h1 tabindex="-1">Player pages</h1>
+          <p>Every athlete in Mystery Player and Career Path, ranked by preview rating. Open one for their bio, career path and stats.</p>
+        </div>
+      </div>
+      <div class="afilt">
+        <div class="chips" role="group" aria-label="League" id="alg"></div>
+        <label class="asearch"><span class="vh">Find a player or team</span><input id="aq" type="search" placeholder="Find a player or team"></label>
+        <span class="acnt" id="acnt" aria-live="polite"></span>
+        <a class="btn ghost redit-link" href="#ratings" id="reditBtn" hidden>Edit ratings</a>
+      </div>
+      <div class="agrid" id="agrid"></div>
+      <p class="note">Ratings use a temporary honors formula unless StatBattle has set one by hand. Silhouettes stand in for player photos.</p>
+    </section>
+
+    <section class="view" id="v-ratings" hidden>
+      <button class="back" data-go="players">&larr; All players</button>
+      <div class="head">
+        <div>
+          <h1 tabindex="-1">Edit ratings</h1>
+          <p>Your rating always wins over the formula, now and after any formula change. Type a whole number from 1 to 99, then save. Clear a rating with “Use formula”.</p>
+        </div>
+      </div>
+      <div class="rpanel rlocked" id="rlocked" hidden><h2>Dev mode needed</h2><p>The ratings editor is only available in dev mode.</p></div>
+      <div class="rpanel" id="rpanel">
+        <p class="rstate" id="rstate" aria-live="polite"></p>
+        <div class="afilt rfilt">
+          <div class="chips" role="group" aria-label="League" id="rlg"></div>
+          <label class="asearch"><span class="vh">Find a player</span><input id="rq" type="search" placeholder="Find a player"></label>
+          <label class="rchk"><input type="checkbox" id="ronly"> Only players with your rating</label>
+        </div>
+        <div class="ractions">
+          <button class="btn" id="rsave" disabled>Save changes</button>
+          <button class="btn ghost" id="rdiscard" hidden>Discard unsaved</button>
+          <button class="btn ghost" id="rexport">Copy all as JSON</button>
+          <button class="btn ghost" id="rimport">Paste JSON</button>
+          <span class="rmsg" id="rmsg2" aria-live="polite"></span>
+        </div>
+        <div id="riowrap" hidden><label class="rio">Ratings JSON: slug or name to rating, e.g. {"tom-brady": 99}<textarea id="rio" rows="5" spellcheck="false"></textarea></label>
+          <button class="btn ghost" id="rload">Load as unsaved changes</button></div>
+        <p class="rcount" id="rcount"></p>
+        <div class="tw"><table class="ct rtab"><caption class="vh">Player ratings</caption>
+          <thead><tr><th scope="col">Player</th><th scope="col">League</th><th scope="col">Pos</th><th scope="col" class="num">Formula</th><th scope="col" class="num">Rating</th><th scope="col">Source</th></tr></thead>
+          <tbody id="rtbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-player" hidden>
+      <button class="back" data-go="players">&larr; All players</button>
+      <div id="pbody"></div>
+    </section>
+  </div>
+</main>
+
+<div class="scrim" id="scrim">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="pt">
+    <div class="ph" id="phd">
+      <div class="ic" id="pic"></div>
+      <div><h2 id="pt"></h2><div class="k" id="pk"></div></div>
+      <button class="x" id="px" aria-label="Close">&times;</button>
+    </div>
+    <div class="pb">
+      <div><h4 id="ph4">Choose a sport</h4><div class="picks" id="picks" role="group" aria-labelledby="ph4"></div></div>
+      <p id="pd"></p>
+      <div><h4>How it plays</h4><ol id="pr"></ol></div>
+      <div class="meta" id="pm"></div>
+      <div class="pf"><button class="btn" id="play">Play</button><a class="btn" id="playlink" href="#" target="_blank" rel="noopener" hidden>Play</a><span class="status" id="pst" aria-live="polite"></span></div>
+    </div>
+  </div>
+</div>
+
+<script src="data/players.js"></script>
+<script src="js/core.js"></script>
+<script src="modes/catalog.js"></script>
+<script src="hall/records.js"></script>
+<script src="hall/helpers.js"></script>
+<script src="hall/champions.js"></script>
+<script src="hall/leaders.js"></script>
+<script src="hall/all-league.js"></script>
+<script src="hall/famous.js"></script>
+<script src="hall/view.js"></script>
+<script src="players/nfl-yards.js"></script>
+<script src="players/athletes.js"></script>
+<script src="players/ratings.js"></script>
+<script src="js/app.js"></script>
+<script src="js/profile.js"></script>
+</body>
+</html>

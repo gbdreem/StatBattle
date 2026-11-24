@@ -1,0 +1,1839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yardage Spinner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* Registered so the team colors can animate smoothly between teams */
+  @property --team-primary   { syntax: "<color>"; inherits: true; initial-value: #013369; }
+  @property --team-secondary { syntax: "<color>"; inherits: true; initial-value: #D50A0A; }
+
+  :root {
+    --bg: #f3f4f7;
+    --surface: #ffffff;
+    --surface-2: #eceef2;
+    --text: #14161a;
+    --muted: #555c69;
+    --border: #d5d9e0;
+    --accent: #013369;
+    --accent-text: #ffffff;
+    --focus: #c8102e;
+    --good: #0f7a3d;
+    --bad: #b3261e;
+    --team-text: #ffffff;
+    --team-accent-text: #ffffff;
+    --radius: 16px;
+    --font-display: "Oswald", "Arial Narrow", system-ui, sans-serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light dark;
+    transition: --team-primary .6s ease, --team-secondary .6s ease;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1015;
+      --surface: #161a21;
+      --surface-2: #1f252e;
+      --text: #eef0f4;
+      --muted: #a0a8b6;
+      --border: #2c333e;
+      --accent: #5b9bea;
+      --accent-text: #06121f;
+      --focus: #ff7070;
+      --good: #4cc27e;
+      --bad: #ff8a80;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg) url("../../assets/bg/football.png") center / cover no-repeat fixed;
+    image-rendering: pixelated;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.45;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ---------- Layout ---------- */
+  .app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: clamp(16px, 3vw, 32px);
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  }
+  header { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: clamp(16px, 3vw, 24px); image-rendering: auto; }
+  .stage, .history, dialog { image-rendering: auto; }
+  .side { display: grid; gap: 24px; align-content: start; min-width: 0; }
+  .team-band {
+    height: 8px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    background: linear-gradient(90deg, var(--team-primary) 0 72%, var(--team-secondary) 72% 100%);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .sub { margin: .35rem 0 0; color: var(--muted); max-width: 62ch; }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(16px, 3vw, 28px);
+    display: grid;
+    gap: 18px;
+    justify-items: center;
+    min-width: 0;
+  }
+
+  /* ---------- Setup ---------- */
+  .setup { display: grid; gap: 12px; justify-items: center; width: 100%; }
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    margin: 0;
+    padding: 4px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--surface-2);
+    max-width: 100%;
+  }
+  .segmented label { position: relative; }
+  .segmented input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+  .segmented span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 54px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .2s, color .2s;
+  }
+  .segmented small { font-weight: 500; opacity: .85; margin-left: 6px; font-variant-numeric: tabular-nums; }
+  @media (max-width: 460px) {
+    .segmented { flex-wrap: nowrap; }
+    .segmented label { flex: 1 1 0; min-width: 0; }
+    .segmented span { min-width: 0; width: 100%; padding: 4px 8px; flex-direction: column; line-height: 1.15; border-radius: 18px; }
+    .segmented small { margin-left: 0; font-size: .78rem; }
+  }
+  .segmented input:checked + span { background: var(--accent); color: var(--accent-text); }
+  .segmented input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .rules { margin: 0; color: var(--muted); text-align: center; max-width: 52ch; }
+  .notice {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    max-width: 56ch;
+  }
+  .notice code { font-size: .95em; }
+
+  /* ---------- Scoreboard ---------- */
+  .scoreboard { width: 100%; display: grid; gap: 10px; }
+  .sb-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+  }
+  .sb-mode {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .sb-stats { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+  .sb-stat { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-size: .9rem; }
+  .pips { display: flex; gap: 5px; }
+  .pip { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+  .pip.used { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--border); }
+  .sb-total {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 7vw, 3.4rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .sb-of { font-size: .45em; color: var(--muted); font-weight: 500; letter-spacing: .03em; }
+  .progress {
+    height: 14px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width .6s cubic-bezier(.2, .9, .3, 1);
+  }
+  .progress-fill.done { background: var(--good); }
+  .sb-need { margin: 0; color: var(--muted); font-size: .92rem; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Wheel ---------- */
+  .wheel-wrap {
+    position: relative;
+    width: min(100%, 702px);
+    aspect-ratio: 1;
+    margin-top: 8px;
+  }
+  /* The wheel is only a picture; its rotated square box would otherwise block taps on the buttons near it. */
+  .rotor { position: absolute; inset: 0; will-change: transform; pointer-events: none; }
+  .rotor svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .rotor text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .03em;
+    pointer-events: none;
+  }
+  .pointer {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    translate: -50% 0;
+    width: 0; height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 32px solid var(--text);
+    filter: drop-shadow(0 2px 3px rgb(0 0 0 / .4));
+    z-index: 2;
+  }
+  .hub {
+    position: absolute;
+    top: 50%; left: 50%;
+    translate: -50% -50%;
+    width: 24%;
+    min-width: 72px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 5px solid var(--surface);
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.05rem, 3.6vw, 1.6rem);
+    letter-spacing: .08em;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgb(0 0 0 / .35);
+    z-index: 2;
+    transition: scale .15s ease, opacity .2s;
+  }
+  .hub:hover:not(:disabled) { scale: 1.06; }
+  .hub:active:not(:disabled) { scale: .97; }
+  .hub:disabled { cursor: not-allowed; opacity: .55; }
+  .hub[aria-busy="true"] { cursor: progress; opacity: 1; }
+  .hub:focus-visible { outline: 4px solid var(--focus); outline-offset: 4px; }
+  .hint { margin: 0; color: var(--muted); font-size: .9rem; text-align: center; }
+  kbd {
+    font: inherit; font-size: .85em; font-weight: 600;
+    padding: 1px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2);
+  }
+
+  /* ---------- Picks panel ---------- */
+  .history {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 16px 16px;
+    min-width: 0;
+  }
+  .history > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border-radius: 8px;
+  }
+  .history > summary::-webkit-details-marker { display: none; }
+  .history > summary::after { content: "▾"; font-size: 1rem; transition: rotate .2s; }
+  .history[open] > summary::after { rotate: 180deg; }
+  .history > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .picks {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .picks li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .picks li.empty { background: none; color: var(--muted); padding: 4px 0; }
+  .chip {
+    flex: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--p) 0 50%, var(--s) 50% 100%);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--border);
+  }
+  .team-logo { flex: none; width: 40px; height: 40px; image-rendering: pixelated; object-fit: contain; }
+  .p-main { flex: 1; min-width: 0; display: grid; }
+  .p-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .p-sub { color: var(--muted); font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .p-yds { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .p-yds.zero { color: var(--muted); }
+  .picks li.flash { animation: flash 1.4s ease-out; }
+  @keyframes flash {
+    0%, 30% { box-shadow: inset 0 0 0 3px var(--team-secondary); background: color-mix(in srgb, var(--team-primary) 22%, var(--surface-2)); }
+    100% { box-shadow: inset 0 0 0 0 transparent; background: var(--surface-2); }
+  }
+  .yds-input {
+    flex: none;
+    width: 96px;
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .yds-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background-color .2s, scale .15s;
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: var(--accent-text); border-color: transparent; min-width: 160px; }
+  .btn-primary:hover { background: var(--accent); scale: 1.03; }
+  .btn-small { min-height: 36px; padding: 0 14px; font-size: .88rem; }
+
+  /* ---------- Turn takeover (team-colored) ---------- */
+  dialog.result {
+    width: min(92vw, 560px);
+    padding: 0;
+    border: 0;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--team-primary);
+    color: var(--team-text);
+    box-shadow: 0 30px 90px rgb(0 0 0 / .55);
+  }
+  dialog.result[open] { animation: pop .5s cubic-bezier(.2, .9, .3, 1.15); }
+  dialog::backdrop { background: rgb(0 0 0 / .62); backdrop-filter: blur(4px); }
+  @keyframes pop { from { opacity: 0; scale: .82; } to { opacity: 1; scale: 1; } }
+  .r-stripe {
+    height: 16px;
+    background: repeating-linear-gradient(-45deg, var(--team-secondary) 0 16px, transparent 16px 32px);
+  }
+  .r-body {
+    display: grid;
+    gap: 6px;
+    padding: clamp(22px, 5vw, 40px) clamp(20px, 5vw, 40px);
+    text-align: center;
+  }
+  .r-label { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+  .r-city {
+    margin: 8px 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 4vw, 1.6rem);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .r-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 10vw, 4.4rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .r-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+  .r-actions .btn { min-width: 120px; }
+  .btn-team { background: var(--team-secondary); color: var(--team-accent-text); border-color: transparent; }
+  .btn-team:hover { background: var(--team-secondary); scale: 1.04; }
+  .btn-ghost { color: var(--team-text); border: 2px solid currentColor; }
+  .btn-ghost:hover { background: rgb(127 127 127 / .2); }
+  dialog.result .btn:focus-visible { outline: 3px solid var(--team-text); outline-offset: 3px; }
+
+  .answer { display: grid; gap: 8px; margin-top: 18px; }
+  .answer-label { font-weight: 600; font-size: .95rem; }
+  .answer input {
+    font: inherit;
+    font-size: 1.15rem;
+    font-weight: 600;
+    min-height: 52px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 3px solid var(--team-secondary);
+    background: #ffffff;
+    color: #14161a;
+    text-align: center;
+    width: 100%;
+  }
+  .answer input:focus-visible { outline: 3px solid var(--team-text); outline-offset: 2px; }
+  .answer-help { margin: 0; font-size: .82rem; opacity: .85; }
+
+
+  /* ---------- Game summary ---------- */
+  dialog.summary {
+    width: min(92vw, 520px);
+    padding: clamp(22px, 5vw, 36px);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 30px 90px rgb(0 0 0 / .55);
+  }
+  dialog.summary[open] { animation: pop .5s cubic-bezier(.2, .9, .3, 1.15); }
+  .s-kicker { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align: center; }
+  .s-title {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 9vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .s-title.win { color: var(--good); }
+  .s-title.loss { color: var(--bad); }
+  .s-detail { margin: 10px 0 18px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .best { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .best-h {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0;
+    font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .best-h span { font-variant-numeric: tabular-nums; }
+  .best-sub { margin: 4px 0 10px; color: var(--muted); font-size: .9rem; }
+  .best .picks li.match { box-shadow: inset 0 0 0 2px var(--good); }
+  .yours { font-size: .72rem; font-weight: 700; color: var(--good); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  @media (max-width: 480px) { .yours .long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .yours { font-size: 1rem; } }
+  dialog.summary .r-actions .btn { min-width: 140px; }
+  .s-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 44px; height: 44px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+    font-size: 1.5rem; line-height: 1; cursor: pointer;
+  }
+  .s-close:hover { background: var(--border); }
+  .s-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .hint .btn { margin: 6px 4px 0; }
+
+  /* ---------- Game history ---------- */
+  .h-count { margin-left: auto; margin-right: 10px; font-family: var(--font-body); font-size: .9rem; font-weight: 600; color: var(--muted); text-transform: none; letter-spacing: 0; }
+  .h-status { margin: 0 0 10px; color: var(--muted); font-size: .85rem; }
+  .games { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .games > li.empty { color: var(--muted); padding: 4px 0; }
+  .game { border-radius: 10px; background: var(--surface-2); }
+  .game > summary {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
+    min-height: 52px; padding: 8px 10px; cursor: pointer; list-style: none; border-radius: 10px;
+  }
+  .game > summary::-webkit-details-marker { display: none; }
+  .game > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .badge { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .badge.win { background: var(--good); color: #fff; }
+  .badge.loss { background: var(--bad); color: #fff; }
+  .g-main { display: grid; min-width: 0; }
+  .g-mode { font-weight: 600; overflow-wrap: anywhere; }
+  .g-when { color: var(--muted); font-size: .8rem; }
+  .g-total { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .g-total small { display: block; color: var(--muted); font-weight: 500; font-size: .78rem; }
+  .game .picks { margin: 0; padding: 0 8px 8px; }
+  .game .picks li { background: var(--surface); }
+  .h-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="team-band" aria-hidden="true"></div>
+    <h1>Yardage Spinner</h1>
+    <p class="sub">Spin for a team, name a player, and bank his best season with that team. Reach the yardage target before you run out of spins.</p>
+  </header>
+
+  <main class="stage">
+    <!-- Setup: shown before a game starts -->
+    <section class="setup" id="setup" aria-label="Game settings">
+      <fieldset class="segmented" id="stat-set">
+        <legend class="sr-only">Stat</legend>
+        <!-- filled from STATS -->
+      </fieldset>
+      <fieldset class="segmented" id="diff-set">
+        <legend class="sr-only">Difficulty</legend>
+        <!-- filled from DIFFICULTIES -->
+      </fieldset>
+      <p class="rules" id="rules"></p>
+      <button class="btn btn-primary" id="start" type="button">Start game</button>
+      <p class="notice" id="data-notice" hidden>
+        Manual mode: the player data (<code>player_seasons.json</code>) didn't load, so the names
+        you enter are logged and you type in each player's yards at the end.
+      </p>
+    </section>
+
+    <!-- Scoreboard: shown during a game -->
+    <section class="scoreboard" id="scoreboard" aria-label="Scoreboard" hidden>
+      <div class="sb-top">
+        <p class="sb-mode" id="sb-mode"></p>
+        <div class="sb-stats">
+          <div class="sb-stat"><span>Spins</span><div class="pips" id="pips" role="img"></div></div>
+          <div class="sb-stat"><span>Re-spins</span><span id="sb-respins"></span></div>
+          <button class="btn btn-small" id="quit" type="button">New game</button>
+        </div>
+      </div>
+      <p class="sb-total"><span id="sb-total">0</span> <span class="sb-of">/ <span id="sb-target"></span> yds</span></p>
+      <div class="progress" id="progress" role="progressbar" aria-label="Progress to target" aria-valuemin="0">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="sb-need" id="sb-need"></p>
+    </section>
+
+    <div class="wheel-wrap">
+      <div class="pointer" aria-hidden="true"></div>
+      <div class="rotor" id="rotor">
+        <svg id="wheel" viewBox="0 0 400 400" role="img" aria-label="Spinner wheel"></svg>
+      </div>
+      <button class="hub" id="hub" type="button" aria-label="Spin the wheel" disabled>SPIN</button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </main>
+
+  <aside class="side">
+    <details class="history" id="history">
+      <summary>Your picks</summary>
+      <ol class="picks" id="picks"></ol>
+    </details>
+
+    <details class="history" id="past">
+      <summary>Game history <span class="h-count" id="h-count"></span></summary>
+      <p class="h-status" id="h-status" aria-live="polite"></p>
+      <ol class="games" id="games"></ol>
+      <div class="h-actions"><button class="btn btn-small" id="h-clear" type="button" hidden>Clear history</button></div>
+    </details>
+  </aside>
+</div>
+
+<p id="live" class="sr-only" aria-live="polite"></p>
+
+<!-- Turn: team landed → name a player -->
+<dialog class="result" id="turn" aria-labelledby="t-name">
+  <div class="r-stripe" aria-hidden="true"></div>
+  <div class="r-body">
+    <p class="r-label" id="t-label"></p>
+    <p class="r-city" id="t-city"></p>
+    <h2 class="r-name" id="t-name"></h2>
+
+    <!-- Not a <form>: sandboxed hosts (like the artifact viewer) block form submission entirely. -->
+    <div class="answer" id="answer-form">
+      <label class="answer-label" for="answer" id="answer-label"></label>
+      <input id="answer" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" placeholder="Player name">
+      <p class="answer-help">Full name. Capitals, accents, Jr./Sr. and small typos don't matter.</p>
+      <div class="r-actions">
+        <button class="btn btn-team" id="submit" type="button">Lock it in</button>
+        <button class="btn btn-ghost" id="respin" type="button"></button>
+        <button class="btn btn-ghost" id="pass" type="button">Pass</button>
+      </div>
+    </div>
+
+  </div>
+  <div class="r-stripe" aria-hidden="true"></div>
+</dialog>
+
+<!-- End of game -->
+<dialog class="summary" id="summary" aria-labelledby="s-title">
+  <button class="s-close" id="s-close" type="button" aria-label="Close and look at your picks">&times;</button>
+  <p class="s-kicker" id="s-kicker"></p>
+  <h2 class="s-title" id="s-title"></h2>
+  <p class="s-detail" id="s-detail"></p>
+  <ol class="picks" id="s-picks"></ol>
+  <section class="best" id="s-best" aria-labelledby="s-best-h" hidden>
+    <h3 class="best-h" id="s-best-h">Best possible <span id="s-best-total"></span></h3>
+    <p class="best-sub" id="s-best-sub"></p>
+    <ol class="picks" id="s-best-picks"></ol>
+  </section>
+  <div class="r-actions">
+    <button class="btn btn-primary" id="again" type="button">Play again</button>
+    <button class="btn" id="settings" type="button">Change settings</button>
+  </div>
+</dialog>
+
+<script type="module">
+// ======================================================================
+// PLAYER DATA (loaded from player_seasons.json beside this page; see Init)
+// ======================================================================
+/*
+  One row per player, per team, per season. Shape:
+
+    {
+      player:   "Derrick Henry",   // display name, also what users type
+      team:     "TEN",             // team abbreviation (see TEAMS below; common PFR codes like
+                                   // "GNB", "KAN", "OAK", "SDG", "STL" are mapped via TEAM_ALIASES)
+      year:     2020,
+      rushYds:  2027,              // rushing yards for that team that season (0 if none)
+      recYds:   114,               // receiving yards for that team that season (0 if none)
+
+      // optional
+      playerId: "HenrDe00",        // REQUIRED when two players share a name (e.g. the two
+                                   // Adrian Petersons); rows with the same playerId are one player
+      aliases:  ["King Henry"],    // extra names that count as a correct answer
+    }
+
+  Notes for Pro Football Reference exports:
+  - Leave out the combined "2TM"/"3TM" rows for traded players; keep the per-team rows.
+  - Old franchise codes collide with current ones: "HOU" before 1997 is the Oilers (use "TEN"),
+    and "BAL" before 1984 is the Colts (use "IND"). Fix those rows before adding them.
+  - Every player is eligible in both modes; the mode only decides which column is used.
+*/
+/*
+  Current data: nflverse weekly player stats, regular seasons 1999 on, summed per player,
+  team and season, with playerId = Pro Football Reference ID ("gsis:..." where none exists).
+  Teams are already current franchise codes. The file is one JSON array, one record per line.
+*/
+let PLAYER_SEASONS = [];
+
+// ======================================================================
+// Game config
+// ======================================================================
+const SPINS_PER_GAME = 3;
+const RESPINS_PER_GAME = 1;
+
+/** Each stat sets its own target per difficulty. */
+const STATS = {
+  rush: { label: "Rushing",   key: "rushYds", noun: "rushing",   targets: { easy: 4000, medium: 4500, hard: 5000 } },
+  rec:  { label: "Receiving", key: "recYds",  noun: "receiving", targets: { easy: 4000, medium: 4400, hard: 4750 } },
+  pass: { label: "Passing",   key: "passYds", noun: "passing",   targets: { easy: 11111, medium: 12500, hard: 14000 } },
+};
+
+const DIFFICULTIES = {
+  easy:   { label: "Easy" },
+  medium: { label: "Medium" },
+  hard:   { label: "Hard" },
+};
+const targetFor = (statId, difficulty) => STATS[statId].targets[difficulty];
+
+// ======================================================================
+// Teams
+// ======================================================================
+const TEAMS = [
+  ["Buffalo", "Bills", "BUF", "AFC", "East", "#00338D", "#C60C30"],
+  ["Miami", "Dolphins", "MIA", "AFC", "East", "#008E97", "#FC4C02"],
+  ["New England", "Patriots", "NE", "AFC", "East", "#002244", "#C60C30"],
+  ["New York", "Jets", "NYJ", "AFC", "East", "#125740", "#000000"],
+  ["Baltimore", "Ravens", "BAL", "AFC", "North", "#241773", "#000000"],
+  ["Cincinnati", "Bengals", "CIN", "AFC", "North", "#FB4F14", "#000000"],
+  ["Cleveland", "Browns", "CLE", "AFC", "North", "#311D00", "#FF3C00"],
+  ["Pittsburgh", "Steelers", "PIT", "AFC", "North", "#FFB612", "#101820"],
+  ["Houston", "Texans", "HOU", "AFC", "South", "#03202F", "#A71930"],
+  ["Indianapolis", "Colts", "IND", "AFC", "South", "#002C5F", "#A2AAAD"],
+  ["Jacksonville", "Jaguars", "JAX", "AFC", "South", "#101820", "#D7A22A"],
+  ["Tennessee", "Titans", "TEN", "AFC", "South", "#4B92DB", "#FFFFFF"],
+  ["Denver", "Broncos", "DEN", "AFC", "West", "#FB4F14", "#002244"],
+  ["Kansas City", "Chiefs", "KC", "AFC", "West", "#E31837", "#FFB81C"],
+  ["Las Vegas", "Raiders", "LV", "AFC", "West", "#000000", "#A5ACAF"],
+  ["Los Angeles", "Chargers", "LAC", "AFC", "West", "#0080C6", "#FFC20E"],
+  ["Dallas", "Cowboys", "DAL", "NFC", "East", "#003594", "#041E42"],
+  ["New York", "Giants", "NYG", "NFC", "East", "#0B2265", "#A71930"],
+  ["Philadelphia", "Eagles", "PHI", "NFC", "East", "#004C54", "#A5ACAF"],
+  ["Washington", "Commanders", "WAS", "NFC", "East", "#5A1414", "#FFB612"],
+  ["Chicago", "Bears", "CHI", "NFC", "North", "#0B162A", "#C83803"],
+  ["Detroit", "Lions", "DET", "NFC", "North", "#0076B6", "#B0B7BC"],
+  ["Green Bay", "Packers", "GB", "NFC", "North", "#203731", "#FFB612"],
+  ["Minnesota", "Vikings", "MIN", "NFC", "North", "#4F2683", "#FFC62F"],
+  ["Atlanta", "Falcons", "ATL", "NFC", "South", "#A71930", "#000000"],
+  ["Carolina", "Panthers", "CAR", "NFC", "South", "#0085CA", "#101820"],
+  ["New Orleans", "Saints", "NO", "NFC", "South", "#D3BC8D", "#101820"],
+  ["Tampa Bay", "Buccaneers", "TB", "NFC", "South", "#D50A0A", "#FF7900"],
+  ["Arizona", "Cardinals", "ARI", "NFC", "West", "#97233F", "#000000"],
+  ["Los Angeles", "Rams", "LAR", "NFC", "West", "#003594", "#FFA300"],
+  ["San Francisco", "49ers", "SF", "NFC", "West", "#AA0000", "#B3995D"],
+  ["Seattle", "Seahawks", "SEA", "NFC", "West", "#002244", "#69BE28"],
+].map(([city, name, abbr, conference, division, primary, secondary]) =>
+  Object.freeze({ city, name, abbr, conference, division, primary, secondary }));
+
+const TEAM_BY_ABBR = new Map(TEAMS.map((t) => [t.abbr, t]));
+
+/** Pixel-art logos drawn on the wheel, served beside the page. A team with a logo shows it at the
+ *  wide outer end of its slice, with its label moved toward the center. */
+const TEAM_LOGOS = {
+  ARI: "../../assets/logos/ari.png",
+  ATL: "../../assets/logos/atl.png",
+  BAL: "../../assets/logos/bal.png",
+  BUF: "../../assets/logos/buf.png",
+  CAR: "../../assets/logos/car.png",
+  CHI: "../../assets/logos/chi.png",
+  CIN: "../../assets/logos/cin.png",
+  CLE: "../../assets/logos/cle.png",
+  DAL: "../../assets/logos/dal.png",
+  DEN: "../../assets/logos/den.png",
+  DET: "../../assets/logos/det.png",
+  GB:  "../../assets/logos/gb.png",
+  HOU: "../../assets/logos/hou.png",
+  IND: "../../assets/logos/ind.png",
+  JAX: "../../assets/logos/jax.png",
+  KC:  "../../assets/logos/kc.png",
+  LAC: "../../assets/logos/lac.png",
+  LAR: "../../assets/logos/lar.png",
+  LV:  "../../assets/logos/lv.png",
+  MIA: "../../assets/logos/mia.png",
+  MIN: "../../assets/logos/min.png",
+  NE:  "../../assets/logos/ne.png",
+  NO:  "../../assets/logos/no.png",
+  NYG: "../../assets/logos/nyg.png",
+  NYJ: "../../assets/logos/nyj.png",
+  PHI: "../../assets/logos/phi.png",
+  PIT: "../../assets/logos/pit.png",
+  SEA: "../../assets/logos/sea.png",
+  SF:  "../../assets/logos/sf.png",
+  TB:  "../../assets/logos/tb.png",
+  TEN: "../../assets/logos/ten.png",
+  WAS: "../../assets/logos/was.png",
+};
+
+/** Other codes (mostly Pro Football Reference's) mapped to the franchise abbreviations above. */
+const TEAM_ALIASES = {
+  GNB: "GB", KAN: "KC", NWE: "NE", NOR: "NO", SFO: "SF", TAM: "TB",
+  LVR: "LV", OAK: "LV", RAI: "LV", LAI: "LV",
+  SDG: "LAC", SD: "LAC", SDC: "LAC",
+  STL: "LAR", RAM: "LAR", LA: "LAR",
+  PHO: "ARI", CRD: "ARI",
+  OTI: "TEN", OIL: "TEN", CLT: "IND", RAV: "BAL", HTX: "HOU",
+  WSH: "WAS", JAC: "JAX",
+};
+
+function normalizeTeam(code) {
+  const c = String(code ?? "").trim().toUpperCase();
+  if (TEAM_BY_ABBR.has(c)) return c;
+  return TEAM_ALIASES[c] ?? null;
+}
+
+// ======================================================================
+// Player index + name matching
+// ======================================================================
+const SUFFIXES = new Set(["jr", "sr", "ii", "iii", "iv", "v"]);
+
+/*
+  StatBattle name dictionary, loaded from names.json beside the page (see Init):
+  - givenNames: groups of first names that count as the same (Matt = Matthew, Zeke = Ezekiel).
+    A name can be in several groups (Chris = Christopher or Christian).
+  - tokens: words that are equal anywhere in a name (Saint = St).
+  - players.nfl: other names a player is known by, keyed by PFR ID (Chad Ochocinco, Beanie Wells,
+    legal first names like Elisha Manning).
+*/
+const GIVEN_NAMES = new Map();   // first name -> [group ids]
+const NAME_TOKENS = new Map();   // word -> canonical word
+let PLAYER_ALIASES = {};         // PFR ID -> [names]
+
+function loadNameDictionary(dict) {
+  for (const group of dict?.givenNames ?? []) {
+    for (const n of group) {
+      if (!GIVEN_NAMES.has(n)) GIVEN_NAMES.set(n, []);
+      GIVEN_NAMES.get(n).push(group[0]);
+    }
+  }
+  for (const group of dict?.tokens ?? []) for (const t of group.slice(1)) NAME_TOKENS.set(t, group[0]);
+  PLAYER_ALIASES = dict?.players?.nfl ?? {};
+}
+
+/** "Amon-Ra St. Brown" → ["amon", "ra", "st", "brown"]; suffixes (Jr., III) dropped. */
+function nameTokens(s) {
+  return String(s ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[.,'’`"]/g, "")
+    .split(/[\s\-_]+/)
+    .map((tok) => tok.replace(/[^a-z0-9]/g, ""))
+    .filter((tok) => tok && !SUFFIXES.has(tok))
+    .map((tok) => NAME_TOKENS.get(tok) ?? tok);
+}
+
+/** "Amon-Ra St. Brown" → "amonrastbrown"; "Odell Beckham Jr." → "odellbeckham". */
+function normalizeName(s) {
+  return nameTokens(s).join("");
+}
+
+/** The name with its first name swapped for each first-name group it belongs to:
+ *  "Matt Stafford" and "Matthew Stafford" both give "matthewstafford". */
+function givenNameForms(s) {
+  const t = nameTokens(s);
+  if (t.length < 2) return t.length ? [t.join("")] : [];
+  const rest = t.slice(1).join("");
+  return (GIVEN_NAMES.get(t[0]) ?? [t[0]]).map((g) => g + rest);
+}
+
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/** How many typos to forgive for a name of this length. */
+function typoTolerance(q) {
+  return q.length <= 5 ? 0 : q.length <= 10 ? 1 : 2;
+}
+
+/** key → { key, name, keys: display name, akeys: other known names, gkeys: first-name forms of both, seasons } */
+const PLAYERS = new Map();
+
+function buildIndex(rows) {
+  rows.forEach((row, i) => {
+    const team = normalizeTeam(row.team);
+    const year = Number(row.year);
+    const norm = normalizeName(row.player);
+    if (!team || !norm || !Number.isInteger(year)) {
+      console.warn(`PLAYER_SEASONS[${i}] skipped (bad player, team or year):`, row);
+      return;
+    }
+    const key = row.playerId ? `id:${row.playerId}` : `n:${norm}`;
+    let p = PLAYERS.get(key);
+    if (!p) {
+      p = { key, name: String(row.player).trim(), keys: new Set(), akeys: new Set(), gkeys: new Set(), seasons: [] };
+      PLAYERS.set(key, p);
+      for (const alias of [...(row.aliases ?? []), ...(PLAYER_ALIASES[row.playerId] ?? [])]) {
+        const a = normalizeName(alias);
+        if (a) p.akeys.add(a);
+        for (const g of givenNameForms(alias)) p.gkeys.add(g);
+      }
+    }
+    if (!p.keys.has(norm)) {
+      p.keys.add(norm);
+      for (const g of givenNameForms(row.player)) p.gkeys.add(g);
+    }
+    p.seasons.push({
+      team, year,
+      rushYds: Number(row.rushYds) || 0,
+      recYds: Number(row.recYds) || 0,
+      passYds: Number(row.passYds) || 0,
+    });
+  });
+}
+
+/** What a typed answer is compared with: its plain form and its first-name forms. */
+function nameQuery(input) {
+  return { q: normalizeName(input), forms: givenNameForms(input) };
+}
+
+/**
+ * Players matching a typed answer, most certain tier first:
+ * 1. the display name, 2. another known name (Chad Ochocinco), 3. a first-name equivalent
+ * (Matt Stafford → Matthew Stafford), 4. the closest name within typo tolerance.
+ */
+function matchPlayers({ q, forms }, players) {
+  if (!q) return [];
+  for (const has of [(p) => p.keys.has(q), (p) => p.akeys.has(q), (p) => forms.some((f) => p.gkeys.has(f))]) {
+    const hit = players.filter(has);
+    if (hit.length) return hit;
+  }
+  const tol = typoTolerance(q);
+  if (tol === 0) return [];
+  const typed = [q, ...forms];
+  let best = Infinity, found = [];
+  for (const p of players) {
+    let d = Infinity;
+    for (const k of [...p.keys, ...p.akeys, ...p.gkeys]) {
+      for (const t of typed) d = Math.min(d, levenshtein(t, k));
+    }
+    if (d > tol) continue;
+    if (d < best) { best = d; found = [p]; }
+    else if (d === best) found.push(p);
+  }
+  return found;
+}
+
+/** A "season" is one player-year: it can be banked once per game, whatever team it was for. */
+const seasonKey = (player, season) => `${player.key}|${season.year}`;
+
+/**
+ * Resolve a typed name against the landed team.
+ * Returns { kind: "ok", player, season } | { kind: "wrongTeam" | "exhausted", player } | { kind: "notFound" }.
+ */
+function resolveAnswer(input, teamAbbr, statKey, usedSeasons) {
+  const q = nameQuery(input);
+  const all = [...PLAYERS.values()];
+  const onTeam = all.filter((p) => p.seasons.some((s) => s.team === teamAbbr));
+
+  // Match against this team's players first so typos resolve to the plausible player.
+  const matches = matchPlayers(q, onTeam);
+  if (!matches.length) {
+    const elsewhere = matchPlayers(q, all);
+    return elsewhere.length ? { kind: "wrongTeam", player: elsewhere[0] } : { kind: "notFound" };
+  }
+
+  let best = null;
+  for (const player of matches) {
+    for (const season of player.seasons) {
+      if (season.team !== teamAbbr || usedSeasons.has(seasonKey(player, season))) continue;
+      const better = !best
+        || season[statKey] > best.season[statKey]
+        || (season[statKey] === best.season[statKey] && season.year > best.season.year);
+      if (better) best = { player, season };
+    }
+  }
+  return best ? { kind: "ok", ...best } : { kind: "exhausted", player: matches[0] };
+}
+
+// ======================================================================
+// Helpers
+// ======================================================================
+const C = 200;     // wheel center (SVG units)
+const R = 192;     // slice radius
+
+const num = new Intl.NumberFormat();
+const fmt = (n) => num.format(n);
+
+function polar(r, deg) {
+  const rad = (deg * Math.PI) / 180;
+  return { x: C + r * Math.sin(rad), y: C - r * Math.cos(rad) };
+}
+function arcPath(r, a0, a1) {
+  const p0 = polar(r, a0), p1 = polar(r, a1);
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M ${p0.x} ${p0.y} A ${r} ${r} 0 ${large} 1 ${p1.x} ${p1.y}`;
+}
+function slicePath(r, a0, a1) {
+  return `M ${C} ${C} L ${arcPath(r, a0, a1).slice(2)} Z`;
+}
+
+function relativeLuminance(hex) {
+  const v = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4]
+    .map((i) => parseInt(v.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrastRatio(a, b) {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+function contrastText(hex) {
+  return contrastRatio(hex, "#FFFFFF") >= contrastRatio(hex, "#000000") ? "#FFFFFF" : "#000000";
+}
+
+/** Uniform integer in [0, n), crypto-backed with rejection sampling (no modulo bias). */
+function secureRandomInt(n) {
+  if (!Number.isInteger(n) || n < 1) throw new RangeError("n must be a positive integer");
+  const RANGE = 2 ** 32;
+  const limit = RANGE - (RANGE % n);
+  const buf = new Uint32Array(1);
+  let v;
+  do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+  return v % n;
+}
+function secureRandomFloat() {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0] / 2 ** 32;
+}
+
+// ======================================================================
+// State
+// ======================================================================
+const state = {
+  phase: "setup",         // setup | spin | spinning | answer | over
+  stat: "rush",
+  difficulty: "easy",
+  rotation: 0,
+  spinsUsed: 0,
+  respinsLeft: RESPINS_PER_GAME,
+  total: 0,
+  usedTeams: new Set(),   // abbrs removed from the wheel
+  usedSeasons: new Set(), // seasonKey()s already banked
+  picks: [],              // [{ team, input, result, yards }]
+  currentTeam: null,
+  gameId: null,           // id of the game in progress / just finished (game history)
+};
+
+const target = () => targetFor(state.stat, state.difficulty);
+const stat = () => STATS[state.stat];
+/** Manual mode: no player data loaded, so names are logged and yards are typed in at the end. */
+let manual = false;
+const isOver = () => (!manual && state.total >= target()) || state.spinsUsed >= SPINS_PER_GAME;
+
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+const $ = (sel) => document.querySelector(sel);
+const els = {
+  setup: $("#setup"), statSet: $("#stat-set"), diffSet: $("#diff-set"), rules: $("#rules"),
+  start: $("#start"), dataNotice: $("#data-notice"),
+  scoreboard: $("#scoreboard"), sbMode: $("#sb-mode"), pips: $("#pips"), sbRespins: $("#sb-respins"),
+  sbTotal: $("#sb-total"), sbTarget: $("#sb-target"), progress: $("#progress"),
+  progressFill: $("#progress-fill"), sbNeed: $("#sb-need"), quit: $("#quit"),
+  svg: $("#wheel"), rotor: $("#rotor"), hub: $("#hub"), hint: $("#hint"),
+  details: $("#history"), picks: $("#picks"), live: $("#live"),
+  turn: $("#turn"), tLabel: $("#t-label"), tCity: $("#t-city"), tName: $("#t-name"),
+  form: $("#answer-form"), answerLabel: $("#answer-label"), answer: $("#answer"), submit: $("#submit"),
+  respin: $("#respin"), pass: $("#pass"),
+  summary: $("#summary"), sKicker: $("#s-kicker"), sTitle: $("#s-title"),
+  sDetail: $("#s-detail"), sPicks: $("#s-picks"), again: $("#again"), settings: $("#settings"),
+  sClose: $("#s-close"),
+  sBest: $("#s-best"), sBestTotal: $("#s-best-total"), sBestSub: $("#s-best-sub"), sBestPicks: $("#s-best-picks"),
+  past: $("#past"), hCount: $("#h-count"), hStatus: $("#h-status"), games: $("#games"), hClear: $("#h-clear"),
+};
+
+// ======================================================================
+// Rendering
+// ======================================================================
+function availableTeams() {
+  return TEAMS.filter((t) => !state.usedTeams.has(t.abbr));
+}
+
+function renderWheel({ animate = false } = {}) {
+  const teams = availableTeams();
+  const n = teams.length;
+  const step = 360 / n;
+  const useNames = n <= 16;
+  const fontSize = n > 8 ? 16 : n > 4 ? 20 : 22;
+
+  let svg = `<circle cx="${C}" cy="${C}" r="${R + 6}" fill="var(--text)"/>`;
+  // From the rim inward: logo, then the team initials (same spots on every slice).
+  // Logo: centered at 90% of the radius, sized to the slice's width there (capped), just inside the rim.
+  const logoR = R * 0.90;
+  const logoSize = Math.min(44, 2 * logoR * Math.sin((step / 2) * Math.PI / 180) * 0.92, 2 * (R - 3 - logoR));
+  const textEnd = logoR - logoSize / 2 - 6;            // initials end just inside the logo
+  teams.forEach((t, i) => {
+    const a0 = i * step, a1 = (i + 1) * step, mid = a0 + step / 2;
+    const label = (useNames ? t.name : t.abbr).toUpperCase();
+    const logo = TEAM_LOGOS[t.abbr];
+    svg += `
+      <path d="${slicePath(R, a0, a1)}" fill="${t.primary}" stroke="rgb(0 0 0 / .28)" stroke-width="1"/>
+      ${logo ? `<image href="${logo}" width="${logoSize}" height="${logoSize}"
+            x="${C - logoSize / 2}" y="${C - logoR - logoSize / 2}"
+            transform="rotate(${mid} ${C} ${C})" style="image-rendering: pixelated" aria-hidden="true"/>` : ""}
+      <text transform="rotate(${mid} ${C} ${C}) translate(${C} ${C - textEnd}) rotate(-90)"
+            text-anchor="end" dominant-baseline="central"
+            font-size="${fontSize}" fill="${contrastText(t.primary)}">${label}</text>`;
+  });
+  svg += `<circle cx="${C}" cy="${C}" r="52" fill="var(--surface)"/>`;
+  els.svg.innerHTML = svg;
+  els.svg.setAttribute("aria-label", `Spinner wheel with ${n} teams left`);
+
+  if (animate && !reducedMotion.matches) {
+    els.svg.animate(
+      [{ opacity: 0, transform: "scale(.94)" }, { opacity: 1, transform: "scale(1)" }],
+      { duration: 280, easing: "ease-out" });
+  }
+}
+
+function renderRules() {
+  for (const small of els.diffSet.querySelectorAll("small[data-for]")) {
+    small.textContent = fmt(targetFor(state.stat, small.dataset.for));
+  }
+  els.rules.textContent =
+    `Reach ${fmt(target())} ${stat().noun} yards in ${SPINS_PER_GAME} spins. ` +
+    `Each team leaves the wheel once it's used, and you get ${RESPINS_PER_GAME} re-spin per game.`;
+}
+
+function renderScoreboard() {
+  const t = target();
+  els.sbMode.textContent = `${stat().label} · ${DIFFICULTIES[state.difficulty].label}`;
+  els.sbTotal.textContent = fmt(state.total);
+  els.sbTarget.textContent = fmt(t);
+
+  els.pips.replaceChildren(...Array.from({ length: SPINS_PER_GAME }, (_, i) => {
+    const pip = document.createElement("span");
+    pip.className = "pip" + (i < state.spinsUsed ? " used" : "");
+    return pip;
+  }));
+  const left = SPINS_PER_GAME - state.spinsUsed;
+  els.pips.setAttribute("aria-label", `${left} of ${SPINS_PER_GAME} spins left`);
+  els.sbRespins.textContent = String(state.respinsLeft);
+
+  const pct = Math.min(100, (state.total / t) * 100);
+  els.progressFill.style.width = `${pct}%`;
+  els.progressFill.classList.toggle("done", state.total >= t);
+  els.progress.setAttribute("aria-valuemax", String(t));
+  els.progress.setAttribute("aria-valuenow", String(Math.min(state.total, t)));
+
+  const need = t - state.total;
+  if (manual && state.phase !== "over") els.sbNeed.textContent =
+    "Manual mode: name a player each spin, then enter their yards at the end.";
+  else if (need <= 0) els.sbNeed.textContent = "Target reached.";
+  else if (left > 0) els.sbNeed.textContent =
+    `${fmt(need)} to go · about ${fmt(Math.ceil(need / left))} per spin`;
+  else els.sbNeed.textContent = `${fmt(need)} short.`;
+}
+
+/** The team's wheel logo, or its two-color dot when it has no logo. */
+function teamBadge(abbr) {
+  const team = TEAM_BY_ABBR.get(abbr);
+  const logo = TEAM_LOGOS[abbr];
+  if (logo) {
+    const img = document.createElement("img");
+    img.className = "team-logo";
+    img.src = logo;
+    img.alt = "";
+    img.width = img.height = 40;
+    img.decoding = "async";
+    return img;
+  }
+  const chip = document.createElement("span");
+  chip.className = "chip";
+  chip.setAttribute("aria-hidden", "true");
+  chip.style.setProperty("--p", team?.primary ?? "#888888");
+  chip.style.setProperty("--s", team?.secondary ?? "#444444");
+  return chip;
+}
+
+function pickItem(pick, { editable = false } = {}) {
+  const team = TEAM_BY_ABBR.get(pick.team);
+  const li = document.createElement("li");
+  const chip = teamBadge(team.abbr ?? pick.team);
+
+  const main = document.createElement("span");
+  main.className = "p-main";
+  const name = document.createElement("span");
+  name.className = "p-name";
+  const sub = document.createElement("span");
+  sub.className = "p-sub";
+  const r = pick.result;
+  if (r.kind === "ok") {
+    name.textContent = r.player.name;
+    sub.textContent = `${team.name} · ${r.season.year}`;
+  } else if (r.kind === "manual") {
+    name.textContent = pick.input;
+    sub.textContent = `${team.city} ${team.name}`;
+  } else if (r.kind === "pass") {
+    name.textContent = "Passed";
+    sub.textContent = `${team.city} ${team.name}`;
+  } else {
+    name.textContent = r.player?.name ?? `“${pick.input}”`;
+    sub.textContent = `${team.name} · ${r.kind === "notFound" ? "not found" : r.kind === "wrongTeam" ? "never played there" : "seasons used up"}`;
+  }
+  main.append(name, sub);
+
+  if (editable && r.kind === "manual") {
+    const yds = document.createElement("input");
+    yds.type = "number";
+    yds.inputMode = "numeric";
+    yds.min = "0";
+    yds.step = "1";
+    yds.placeholder = "Yards";
+    yds.className = "yds-input";
+    yds.value = pick.yards ?? "";
+    yds.setAttribute("aria-label", `${stat().label} yards for ${pick.input} with the ${team.name}`);
+    yds.addEventListener("input", () => {
+      const v = yds.value.trim() === "" ? null : Math.max(0, Math.round(Number(yds.value)));
+      pick.yards = Number.isFinite(v) ? v : null;
+      updateTotals();
+    });
+    li.append(chip, main, yds);
+    return li;
+  }
+
+  const yds = document.createElement("span");
+  yds.className = "p-yds" + (pick.yards ? "" : " zero");
+  yds.textContent = pick.yards == null ? "—" : `${fmt(pick.yards)} yds`;
+  li.append(chip, main, yds);
+  return li;
+}
+
+function renderPicks({ flashNewest = false } = {}) {
+  if (!state.picks.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = state.phase === "setup" ? "Start a game to make picks." : "Spin to make your first pick.";
+    els.picks.replaceChildren(li);
+    return;
+  }
+  els.picks.replaceChildren(...state.picks.map((p) => pickItem(p)));
+  if (flashNewest) els.picks.lastElementChild?.classList.add("flash");
+}
+
+function renderPhase() {
+  const inGame = state.phase !== "setup";
+  els.setup.hidden = inGame;
+  els.scoreboard.hidden = !inGame;
+  els.hub.disabled = state.phase !== "spin";
+  els.hub.setAttribute("aria-busy", String(state.phase === "spinning"));
+  els.hint.innerHTML =
+    state.phase === "setup" ? "Choose a stat and difficulty, then start." :
+    state.phase === "spin" ? "Press <kbd>Space</kbd> or <kbd>Enter</kbd>, or tap SPIN." :
+    state.phase === "over"
+      ? `Game over. <button class="btn btn-small" type="button" data-act="result">See result</button>` +
+        `<button class="btn btn-small" type="button" data-act="again">Play again</button>`
+      : "";
+}
+
+function announce(text) {
+  els.live.textContent = "";
+  requestAnimationFrame(() => { els.live.textContent = text; });
+}
+
+function applyTeamTheme(team) {
+  const root = document.documentElement.style;
+  root.setProperty("--team-primary", team.primary);
+  root.setProperty("--team-secondary", team.secondary);
+  root.setProperty("--team-text", contrastText(team.primary));
+  root.setProperty("--team-accent-text", contrastText(team.secondary));
+}
+
+// ======================================================================
+// Game flow
+// ======================================================================
+function readSettings() {
+  state.stat = document.querySelector('input[name="stat"]:checked').value;
+  state.difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+}
+
+function startGame() {
+  flushHistorySave();
+  readSettings();
+  Object.assign(state, {
+    phase: "spin", spinsUsed: 0, respinsLeft: RESPINS_PER_GAME, total: 0,
+    usedTeams: new Set(), usedSeasons: new Set(), picks: [], currentTeam: null,
+    gameId: newGameId(),
+  });
+  if (els.summary.open) els.summary.close();
+  renderWheel({ animate: true });
+  renderScoreboard();
+  renderPicks();
+  renderPhase();
+  els.hub.focus();
+  announce(`New game: ${fmt(target())} ${stat().noun} yards in ${SPINS_PER_GAME} spins.`);
+}
+
+function backToSetup() {
+  if (state.phase === "spinning") return;
+  flushHistorySave();
+  if (els.turn.open) els.turn.close();
+  if (els.summary.open) els.summary.close();
+  Object.assign(state, { phase: "setup", usedTeams: new Set(), picks: [], currentTeam: null, gameId: null });
+  renderWheel({ animate: true });
+  renderPicks();
+  renderPhase();
+  els.start.focus();
+}
+
+async function spin() {
+  if (state.phase !== "spin") return;
+  const teams = availableTeams();
+  const n = teams.length;
+  const step = 360 / n;
+
+  // Pick the winner first; the animation only shows a decision already made.
+  const index = secureRandomInt(n);
+  const winner = teams[index];
+  const landing = index * step + step * (0.15 + 0.7 * secureRandomFloat());
+
+  // Rotor rotated by `rot` shows wheel angle `a` at screen angle a + rot; the pointer is at 0.
+  const targetRot = (360 - (landing % 360)) % 360;
+  const current = ((state.rotation % 360) + 360) % 360;
+  const delta = (targetRot - current + 360) % 360;
+
+  const reduce = reducedMotion.matches;
+  const turns = reduce ? 1 : 5 + secureRandomInt(3);
+  const duration = reduce ? 600 : 4500 + secureRandomInt(1500);
+  const to = current + turns * 360 + delta;
+
+  state.phase = "spinning";
+  renderPhase();
+  const anim = els.rotor.animate(
+    [{ transform: `rotate(${current}deg)` }, { transform: `rotate(${to}deg)` }],
+    { duration, easing: "cubic-bezier(0.12, 0.8, 0.18, 1)", fill: "forwards" });
+  try { await anim.finished; } catch { /* cancelled */ }
+
+  state.rotation = to % 360;
+  els.rotor.style.transform = `rotate(${state.rotation}deg)`;
+  anim.cancel();
+
+  state.currentTeam = winner;
+  state.usedTeams.add(winner.abbr); // off the wheel whether answered or re-spun
+  openTurn(winner);
+}
+
+function openTurn(team) {
+  state.phase = "answer";
+  renderPhase();
+  applyTeamTheme(team);
+  els.tLabel.textContent = `Spin ${state.spinsUsed + 1} of ${SPINS_PER_GAME}`;
+  els.tCity.textContent = team.city;
+  els.tName.textContent = team.name;
+  els.answerLabel.textContent = `Name a player. His best ${stat().noun} season with the ${team.name} counts.`;
+  els.answer.value = "";
+  els.respin.textContent = `Re-spin (${state.respinsLeft})`;
+  els.respin.disabled = state.respinsLeft < 1;
+  els.form.hidden = false;
+  els.turn.showModal();
+  els.answer.focus();
+  announce(`${team.city} ${team.name}. Name a player.`);
+}
+
+function submitAnswer(input) {
+  if (state.phase !== "answer") return;
+  const team = state.currentTeam;
+  const key = stat().key;
+  const result = input === null ? { kind: "pass" }
+    : manual ? { kind: "manual" }
+    : resolveAnswer(input, team.abbr, key, state.usedSeasons);
+
+  const yards = result.kind === "ok" ? result.season[key] : 0;
+  if (result.kind === "ok") state.usedSeasons.add(seasonKey(result.player, result.season));
+  state.spinsUsed += 1;
+  state.total += yards;
+  // Manual picks start with unknown yards (null) until entered on the summary.
+  state.picks.push({ team: team.abbr, input: input ?? "", result, yards: result.kind === "manual" ? null : yards });
+
+  // Straight back to the wheel; the pick is added to the picks panel.
+  els.turn.close();
+  renderWheel({ animate: true });
+  renderScoreboard();
+  renderPicks({ flashNewest: true });
+  announce(describePick(state.picks.at(-1)));
+  if (isOver()) return showSummary();
+  state.phase = "spin";
+  renderPhase();
+  els.hub.focus();
+}
+
+/** One-line description of a pick for screen readers. */
+function describePick(pick) {
+  const team = TEAM_BY_ABBR.get(pick.team);
+  const r = pick.result;
+  if (r.kind === "manual") return `${pick.input} logged for the ${team.name}.`;
+  if (r.kind === "ok") return `${r.player.name}, ${r.season.year}: ${fmt(pick.yards)} yards. Total ${fmt(state.total)}.`;
+  if (r.kind === "pass") return `Passed on the ${team.name}.`;
+  return `${r.player?.name ?? pick.input}: no yards.`;
+}
+
+function respin() {
+  if (state.phase !== "answer" || state.respinsLeft < 1) return;
+  state.respinsLeft -= 1;
+  els.turn.close();
+  renderWheel({ animate: true });
+  renderScoreboard();
+  state.phase = "spin";
+  spin();
+}
+
+/** Manual mode: re-total after a yards box changes (without rebuilding the summary list). */
+function updateTotals() {
+  state.total = state.picks.reduce((sum, p) => sum + (p.yards ?? 0), 0);
+  renderScoreboard();
+  renderPicks();
+  renderSummaryText();
+  scheduleHistorySave();
+}
+
+function renderSummaryText() {
+  const t = target();
+  const missing = state.picks.filter((p) => p.result.kind === "manual" && p.yards == null).length;
+  els.sKicker.textContent = `${stat().label} · ${DIFFICULTIES[state.difficulty].label}`;
+  if (state.total < t && missing > 0) {
+    els.sTitle.textContent = "Look them up";
+    els.sTitle.className = "s-title";
+    els.sDetail.textContent =
+      `Enter each player's best ${stat().noun} season with that team. ` +
+      `${fmt(state.total)} of ${fmt(t)} so far.`;
+    return;
+  }
+  const won = state.total >= t;
+  els.sTitle.textContent = won ? "You hit it" : "Came up short";
+  els.sTitle.className = `s-title ${won ? "win" : "loss"}`;
+  els.sDetail.textContent = won
+    ? `${fmt(state.total)} of ${fmt(t)} yards in ${state.spinsUsed} spin${state.spinsUsed === 1 ? "" : "s"}.`
+    : `${fmt(state.total)} of ${fmt(t)} yards, ${fmt(t - state.total)} short.`;
+}
+
+function showSummary() {
+  state.phase = "over";
+  renderPhase();
+  renderSummaryText();
+  els.sPicks.replaceChildren(...state.picks.map((p) => pickItem(p, { editable: manual })));
+  renderBest();
+  els.summary.showModal();
+  (els.sPicks.querySelector(".yds-input") ?? els.again).focus();
+  announce(`${els.sTitle.textContent}. ${els.sDetail.textContent} ${els.sBest.hidden ? "" : els.sBestSub.textContent}`);
+  saveCurrentGame();
+}
+
+// ======================================================================
+// Best possible answers for the teams this game landed on
+// ======================================================================
+let seasonsByTeam = null;   // abbr -> [{ player, season }], built on first use
+
+/**
+ * The highest total available for these teams under the game's rules: one answer per team,
+ * and a player's season counts once (a season split between two teams can't be banked twice).
+ * Each team keeps its top few seasons, then every combination is tried (3 teams × 8 = 512 at most).
+ */
+function bestPossible(teamAbbrs, key) {
+  if (!seasonsByTeam) {
+    seasonsByTeam = new Map();
+    for (const player of PLAYERS.values()) {
+      for (const season of player.seasons) {
+        if (!seasonsByTeam.has(season.team)) seasonsByTeam.set(season.team, []);
+        seasonsByTeam.get(season.team).push({ player, season });
+      }
+    }
+  }
+  const options = teamAbbrs.map((abbr) =>
+    (seasonsByTeam.get(abbr) ?? [])
+      .filter((c) => c.season[key] > 0)
+      .sort((a, b) => b.season[key] - a.season[key] || b.season.year - a.season.year)
+      .slice(0, 8));
+  let best = { total: -1, picks: [] };
+  const used = new Set(), current = [];
+  (function search(i, total) {
+    if (i === options.length) {
+      if (total > best.total) best = { total, picks: [...current] };
+      return;
+    }
+    let tried = false;
+    for (const c of options[i]) {
+      const k = seasonKey(c.player, c.season);
+      if (used.has(k)) continue;
+      tried = true;
+      used.add(k); current.push(c);
+      search(i + 1, total + c.season[key]);
+      current.pop(); used.delete(k);
+    }
+    if (!tried) { current.push(null); search(i + 1, total); current.pop(); }
+  })(0, 0);
+  return best;
+}
+
+function renderBest() {
+  if (manual || !state.picks.length) { els.sBest.hidden = true; return; }
+  const key = stat().key;
+  const teams = state.picks.map((p) => p.team);
+  const best = bestPossible(teams, key);
+  const t = target();
+  els.sBestTotal.textContent = `${fmt(best.total)} yds`;
+  const pct = best.total > 0 ? Math.round((state.total / best.total) * 100) : 0;
+  els.sBestSub.textContent = state.total >= best.total
+    ? "You found the best possible picks for these teams."
+    : `The best ${stat().noun} seasons for these teams add up to ${fmt(best.total)}` +
+      `${best.total < t ? `, still short of ${fmt(t)}` : ""}. You got ${fmt(state.total)} (${pct}%).`;
+  els.sBestPicks.replaceChildren(...best.picks.map((c, i) => {
+    const mine = state.picks[i];
+    if (!c) return storedPickItem({ team: teams[i], kind: "notFound", name: null, year: null, yards: 0 });
+    const li = storedPickItem({
+      team: teams[i], kind: "ok", name: c.player.name, year: c.season.year, yards: c.season[key],
+    });
+    const matched = mine?.result.kind === "ok" && mine.result.player === c.player && mine.result.season.year === c.season.year;
+    if (matched) {
+      li.classList.add("match");
+      const tag = document.createElement("span");
+      tag.className = "yours";
+      const long = document.createElement("span");
+      long.className = "long";
+      long.textContent = " Your pick";
+      tag.append("✓", long);
+      li.querySelector(".p-main").after(tag);
+    }
+    return li;
+  }));
+  els.sBest.hidden = false;
+}
+
+/** Close the result screen but stay on the finished game: scoreboard and picks stay on screen. */
+function closeSummary() {
+  if (els.summary.open) els.summary.close();
+}
+function reopenSummary() {
+  if (state.phase !== "over" || els.summary.open) return;
+  renderSummaryText();
+  els.sPicks.replaceChildren(...state.picks.map((p) => pickItem(p, { editable: manual })));
+  renderBest();
+  els.summary.showModal();
+  els.again.focus();
+}
+
+// ======================================================================
+// Game history (saved per player with the db capability; this visit only without it)
+// ======================================================================
+const HISTORY_MAX = 200;              // newest games kept; one document per player stays well under 256 KiB
+const HISTORY_DOC = "yardage-spinner-history";
+const history = {
+  games: [],        // newest first: { id, at, stat, difficulty, target, total, won, picks: [...] }
+  ref: null,        // db document for this player, once known
+  status: "loading" // loading | saved | local | readonly | error
+};
+let historyWriting = false, historyDirty = false, historySaveTimer = null;
+
+function newGameId() {
+  try { return crypto.randomUUID(); }
+  catch { return `${Date.now().toString(36)}-${secureRandomInt(2 ** 30).toString(36)}`; }
+}
+
+function toStoredPick(pick) {
+  const r = pick.result;
+  return {
+    team: pick.team,
+    kind: r.kind,                                         // ok | pass | manual | notFound | wrongTeam | exhausted
+    name: r.kind === "ok" ? r.player.name : r.kind === "pass" ? null : (r.player?.name ?? pick.input),
+    year: r.kind === "ok" ? r.season.year : null,
+    yards: pick.yards ?? 0,
+  };
+}
+
+function currentGameRecord() {
+  return {
+    id: state.gameId,
+    at: new Date().toISOString(),
+    stat: state.stat,
+    difficulty: state.difficulty,
+    target: target(),
+    total: state.total,
+    won: state.total >= target(),
+    picks: state.picks.map(toStoredPick),
+  };
+}
+
+/** Add or replace the finished game in the history (same id = same game, e.g. manual-mode edits). */
+function saveCurrentGame() {
+  if (state.phase !== "over" || !state.gameId) return;
+  const rec = currentGameRecord();
+  const old = history.games.find((g) => g.id === rec.id);
+  if (old) rec.at = old.at;                               // keep when the game was played
+  history.games = [rec, ...history.games.filter((g) => g.id !== rec.id)].slice(0, HISTORY_MAX);
+  renderHistory();
+  persistHistory();
+}
+function scheduleHistorySave() {
+  clearTimeout(historySaveTimer);
+  historySaveTimer = setTimeout(() => { historySaveTimer = null; saveCurrentGame(); }, 800);
+}
+function flushHistorySave() {
+  if (historySaveTimer === null) return;
+  clearTimeout(historySaveTimer);
+  historySaveTimer = null;
+  saveCurrentGame();
+}
+
+/** One write at a time to the player's history document; a change during a write is sent right after. */
+async function persistHistory() {
+  if (!history.ref) return;
+  if (historyWriting) { historyDirty = true; return; }
+  historyWriting = true;
+  try {
+    do {
+      historyDirty = false;
+      await history.ref.set({ games: history.games.slice(0, HISTORY_MAX) });
+    } while (historyDirty);
+    history.status = "saved";
+  } catch (err) {
+    history.status = err?.code === "invalid_argument" ? "readonly" : "error";
+    if (history.status === "readonly") history.ref = null;  // can't write here: keep this visit's games only
+    console.warn("Game history wasn't saved.", err);
+  } finally {
+    historyWriting = false;
+    renderHistory();
+  }
+}
+
+async function initHistory() {
+  renderHistory();
+  const timer = setTimeout(() => {
+    if (history.status === "loading") { history.status = "local"; renderHistory(); }
+  }, 10000);
+  try {
+    const c = window.claude;
+    const use = (name) => (typeof c?.use === "function" ? c.use(name) : Promise.resolve(null));
+    const [db, user] = await Promise.all([use("db"), use("user")]);
+    if (!db) { history.status = "local"; return; }
+    // Per-player history needs the viewer's id (the `user` capability). Until the page declares it,
+    // history lives in one record only the owner and editors can read or write.
+    const uid = user ? await user.id() : null;
+    if (!uid && user && (await user.canEdit?.()) === false) { history.status = "readonly"; return; }
+    const ownerRef = db.doc(`editors/${HISTORY_DOC}`);
+    const ref = uid ? db.doc(`data/users/${uid}/${HISTORY_DOC}`) : ownerRef;
+    const snaps = await Promise.all((uid ? [ref, ownerRef] : [ref]).map((r) => r.get()));
+    const saved = snaps.flatMap((snap) => {
+      const games = snap.exists ? snap.data()?.games : null;
+      return Array.isArray(games) ? JSON.parse(JSON.stringify(games)) : [];
+    });
+    const thisVisit = history.games;                       // games finished before the saved history arrived
+    const ids = new Set(thisVisit.map((g) => g.id));
+    const seen = new Set();
+    history.games = [...thisVisit, ...saved.filter((g) => g && !ids.has(g.id))]
+      .filter((g) => !seen.has(g.id) && seen.add(g.id))
+      .sort((a, b) => String(b.at).localeCompare(String(a.at)))
+      .slice(0, HISTORY_MAX);
+    history.ref = ref;
+    history.status = "saved";
+    if (thisVisit.length) await persistHistory();
+  } catch (err) {
+    history.status = "error";
+    console.warn("Couldn't load game history.", err);
+  } finally {
+    clearTimeout(timer);
+    renderHistory();
+  }
+}
+
+const whenFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const HISTORY_STATUS = {
+  loading: "Loading your history…",
+  saved: "Saved to your account, on any device you're signed in on.",
+  local: "History isn't saved in this view, so only this visit's games are shown.",
+  readonly: "History can't be saved for you on this page, so only this visit's games are shown.",
+  error: "Couldn't reach your saved history. This visit's games are shown.",
+};
+
+function storedPickItem(p) {
+  const team = TEAM_BY_ABBR.get(p.team) ?? { city: "", name: p.team, primary: "#888888", secondary: "#444444" };
+  const li = document.createElement("li");
+  const chip = teamBadge(team.abbr ?? p.team);
+  const main = document.createElement("span");
+  main.className = "p-main";
+  const name = document.createElement("span");
+  name.className = "p-name";
+  const sub = document.createElement("span");
+  sub.className = "p-sub";
+  const where = `${team.city} ${team.name}`.trim();
+  const NOTE = { notFound: "not found", wrongTeam: "never played there", exhausted: "seasons used up" };
+  if (p.kind === "pass") { name.textContent = "Passed"; sub.textContent = where; }
+  else if (p.kind === "ok") { name.textContent = p.name; sub.textContent = `${team.name} · ${p.year}`; }
+  else if (p.kind === "manual") { name.textContent = p.name; sub.textContent = where; }
+  else { name.textContent = p.name ? `“${p.name}”` : "—"; sub.textContent = `${team.name} · ${NOTE[p.kind] ?? "no yards"}`; }
+  main.append(name, sub);
+  const yds = document.createElement("span");
+  yds.className = "p-yds" + (p.yards ? "" : " zero");
+  yds.textContent = `${fmt(p.yards || 0)} yds`;
+  li.append(chip, main, yds);
+  return li;
+}
+
+function gameItem(g) {
+  const li = document.createElement("li");
+  const det = document.createElement("details");
+  det.className = "game";
+  const sum = document.createElement("summary");
+  const badge = document.createElement("span");
+  badge.className = `badge ${g.won ? "win" : "loss"}`;
+  badge.textContent = g.won ? "Hit" : "Short";
+  const main = document.createElement("span");
+  main.className = "g-main";
+  const mode = document.createElement("span");
+  mode.className = "g-mode";
+  mode.textContent = `${STATS[g.stat]?.label ?? g.stat} · ${DIFFICULTIES[g.difficulty]?.label ?? g.difficulty}`;
+  const when = document.createElement("span");
+  when.className = "g-when";
+  const d = new Date(g.at);
+  when.textContent = Number.isNaN(d.getTime()) ? "" : whenFmt.format(d);
+  main.append(mode, when);
+  const total = document.createElement("span");
+  total.className = "g-total";
+  total.textContent = fmt(g.total || 0);
+  const of = document.createElement("small");
+  const diff = (g.total || 0) - (g.target || 0);
+  of.textContent = `of ${fmt(g.target || 0)} · ${diff >= 0 ? "+" : "−"}${fmt(Math.abs(diff))}`;
+  total.append(of);
+  sum.append(badge, main, total);
+  sum.setAttribute("aria-label",
+    `${g.won ? "Hit the target" : "Came up short"}, ${mode.textContent}, ${when.textContent}: ` +
+    `${fmt(g.total || 0)} of ${fmt(g.target || 0)} yards`);
+  const list = document.createElement("ol");
+  list.className = "picks";
+  list.replaceChildren(...(g.picks ?? []).map(storedPickItem));
+  det.append(sum, list);
+  li.append(det);
+  return li;
+}
+
+function renderHistory() {
+  const n = history.games.length;
+  els.hCount.textContent = n ? String(n) : "";
+  els.hStatus.textContent = HISTORY_STATUS[history.status] ?? "";
+  els.hClear.hidden = n === 0;
+  if (!n) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = history.status === "loading" ? "" : "Finished games show up here.";
+    els.games.replaceChildren(li);
+    return;
+  }
+  els.games.replaceChildren(...history.games.map(gameItem));
+}
+
+let clearArmed = null;
+function clearHistory() {
+  if (!clearArmed) {
+    els.hClear.textContent = "Tap again to clear";
+    clearArmed = setTimeout(() => { clearArmed = null; els.hClear.textContent = "Clear history"; }, 4000);
+    return;
+  }
+  clearTimeout(clearArmed);
+  clearArmed = null;
+  els.hClear.textContent = "Clear history";
+  history.games = [];
+  renderHistory();
+  persistHistory();
+  announce("Game history cleared.");
+}
+
+// ======================================================================
+// Setup controls
+// ======================================================================
+function buildSegmented(fieldset, name, options, checked, describe) {
+  for (const [value, opt] of Object.entries(options)) {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "radio"; input.name = name; input.value = value; input.checked = value === checked;
+    const span = document.createElement("span");
+    span.textContent = opt.label;
+    const extra = describe?.(value, opt);
+    if (extra != null) {
+      const small = document.createElement("small");
+      small.dataset.for = value;
+      small.textContent = extra;
+      span.append(small);
+    }
+    label.append(input, span);
+    fieldset.append(label);
+    input.addEventListener("change", () => { readSettings(); renderRules(); });
+  }
+}
+
+buildSegmented(els.statSet, "stat", STATS, state.stat);
+buildSegmented(els.diffSet, "difficulty", DIFFICULTIES, state.difficulty, (d) => fmt(targetFor(state.stat, d)));
+
+// ======================================================================
+// Events
+// ======================================================================
+els.start.addEventListener("click", startGame);
+els.hub.addEventListener("click", spin);
+els.quit.addEventListener("click", backToSetup);
+
+function lockIn() {
+  const v = els.answer.value.trim();
+  if (!v) { els.answer.focus(); return; }
+  submitAnswer(v);
+}
+els.submit.addEventListener("click", lockIn);
+els.answer.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" || e.isComposing) return;
+  e.preventDefault();
+  lockIn();
+});
+els.pass.addEventListener("click", () => submitAnswer(null));
+els.respin.addEventListener("click", respin);
+
+// Esc must not dismiss an unanswered turn.
+els.turn.addEventListener("cancel", (e) => e.preventDefault());
+
+els.again.addEventListener("click", startGame);
+els.settings.addEventListener("click", backToSetup);
+// × or Esc closes the result screen and leaves the finished game on screen.
+els.sClose.addEventListener("click", closeSummary);
+els.summary.addEventListener("close", () => {
+  if (state.phase !== "over") return;                      // closed by Play again / Change settings
+  flushHistorySave();
+  renderPicks();
+  els.details.open = true;
+  els.hint.querySelector('[data-act="result"]')?.focus();
+  announce(`Final: ${fmt(state.total)} of ${fmt(target())} yards. Your picks are listed beside the wheel.`);
+});
+els.hint.addEventListener("click", (e) => {
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (act === "result") reopenSummary();
+  else if (act === "again") startGame();
+});
+els.hClear.addEventListener("click", clearHistory);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== " " && e.key !== "Enter") return;
+  if (e.repeat || state.phase !== "spin" || els.turn.open || els.summary.open) return;
+  if (e.target.closest("button, input, select, textarea, summary, a, [contenteditable]")) return;
+  e.preventDefault();
+  spin();
+});
+
+// ======================================================================
+// Init
+// ======================================================================
+readSettings();
+renderRules();
+renderWheel();
+renderPicks();
+renderPhase();
+els.details.open = true;
+els.past.open = true;
+initHistory();
+
+// Load the player data, then enable Start. Falls back to manual mode if it can't load.
+els.start.disabled = true;
+els.start.textContent = "Loading players…";
+const [seasonsRes, namesRes] = await Promise.allSettled([
+  fetch("../../data/player_seasons.json").then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+  fetch("../../data/names.json").then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+]);
+if (seasonsRes.status === "fulfilled") PLAYER_SEASONS = seasonsRes.value;
+else console.warn("player_seasons.json didn't load; using manual mode.", seasonsRes.reason);
+if (namesRes.status === "fulfilled") loadNameDictionary(namesRes.value);
+else console.warn("names.json didn't load; first-name and nickname matching is off.", namesRes.reason);
+buildIndex(PLAYER_SEASONS);
+manual = PLAYERS.size === 0;
+els.dataNotice.hidden = !manual;
+els.start.disabled = false;
+els.start.textContent = "Start game";
+</script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Champions Archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --void:#000000; --surface-900:#0b0c0f; --surface-800:#121419; --surface-700:#1c1f26;
+  --line-700:#14171c; --line-600:#2c313b; --line-500:#636a79;
+  --ink:#f2f4f7; --ink-muted:#a3aab6; --ink-faint:#7d8492;
+  --orange-500:#ff6a00; --orange-400:#ff8a33; --orange-700:#b84c00; --orange-tint:rgba(255,106,0,0.14);
+  --signal-correct:#3ee0ff; --focus:#ff8a33;
+  --font-display:Orbitron,"Eurostile",system-ui,sans-serif;
+  --font-body:"Chakra Petch",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px;
+  --radius-0:0; --radius-sm:2px; --radius-md:4px;
+  --glow-sm:0 0 0 1px #ff6a00, 0 0 12px rgba(255,106,0,0.45);
+  --glow-md:0 0 0 1px #ff8a33, 0 0 24px rgba(255,106,0,0.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+.gq-grid-bg{
+  background-color:var(--void);
+  background-image:linear-gradient(var(--line-700) 1px,transparent 1px),linear-gradient(90deg,var(--line-700) 1px,transparent 1px);
+  background-size:var(--space-8) var(--space-8);
+  color:var(--ink); font-family:var(--font-body); min-height:100vh;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:var(--space-12) var(--space-6)}
+.gq-label{font-family:var(--font-display);font-size:12px;line-height:16px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-muted)}
+h1{font-family:var(--font-display);font-size:40px;line-height:44px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:var(--space-2) 0 var(--space-3)}
+.lede{font-size:16px;line-height:24px;color:var(--ink-muted);max-width:720px;margin:0}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin:var(--space-8) 0}
+.stat{background:var(--surface-900);border:1px solid var(--line-600);padding:var(--space-4)}
+.stat .num{font-family:var(--font-mono);font-size:32px;line-height:36px;font-weight:700;color:var(--ink);margin-top:var(--space-2)}
+.stat .sub{font-size:14px;line-height:20px;color:var(--ink-muted);margin-top:var(--space-1)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4)}
+.tab{font-family:var(--font-display);font-size:12px;line-height:16px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  padding:var(--space-3) var(--space-4);background:var(--surface-800);color:var(--ink-muted);
+  border:1px solid var(--line-500);border-radius:var(--radius-sm);cursor:pointer;
+  transition:border-color 120ms ease-out,box-shadow 120ms ease-out,color 120ms ease-out}
+.tab:hover{border-color:var(--orange-500);color:var(--ink)}
+.tab:focus-visible,.ctl:focus-visible,.franchise-btn:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.tab[aria-selected="true"]{background:var(--orange-tint);border-color:var(--orange-500);color:var(--ink);box-shadow:var(--glow-sm)}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;margin-bottom:var(--space-6)}
+.ctl{font-family:var(--font-body);font-size:16px;line-height:24px;color:var(--ink);background:var(--surface-800);
+  border:1px solid var(--line-500);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3)}
+input.ctl{min-width:260px}
+input.ctl::-webkit-search-cancel-button{filter:grayscale(1)}
+input.ctl::placeholder{color:var(--ink-faint)}
+button.ctl{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;color:var(--ink-muted)}
+button.ctl:hover{border-color:var(--orange-500);color:var(--ink)}
+.count{font-family:var(--font-mono);font-size:13px;line-height:16px;letter-spacing:.08em;color:var(--ink-faint);margin-left:auto}
+
+/* card */
+.gq-card{position:relative;background:var(--surface-900);border:1px solid var(--line-600);border-radius:var(--radius-0);padding:var(--space-6)}
+.gq-card::before,.gq-card::after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--orange-500);pointer-events:none}
+.gq-card::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.gq-card::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-4);margin-bottom:var(--space-4);flex-wrap:wrap}
+.card-title{font-family:var(--font-display);font-size:20px;line-height:28px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0}
+.card-note{font-size:14px;line-height:20px;color:var(--ink-faint);margin:0}
+
+/* table */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{font-family:var(--font-display);font-size:11px;line-height:16px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);
+  text-align:left;padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--line-500);position:sticky;top:0;background:var(--surface-900);white-space:nowrap}
+td{padding:var(--space-3);border-bottom:1px solid var(--line-600);vertical-align:top;font-size:16px;line-height:22px}
+tr:hover td{background:var(--surface-800)}
+.yr{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap}
+.mono{font-family:var(--font-mono);font-size:14px;white-space:nowrap}
+.win{font-weight:600;color:var(--ink)}
+.lose{color:var(--ink-muted)}
+.small{display:block;font-size:13px;line-height:18px;color:var(--ink-faint);margin-top:2px}
+.sb{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--ink-muted);display:block;margin-bottom:2px}
+.tag{display:inline-block;font-family:var(--font-display);font-size:10px;line-height:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  padding:1px 6px;border:1px solid var(--line-500);color:var(--ink-muted);margin-left:var(--space-2);vertical-align:2px;white-space:nowrap}
+.tag.ot{border-color:var(--line-600);color:var(--ink-faint)}
+.empty{color:var(--line-500)}
+.hit{color:var(--orange-500)}
+.era td{background:var(--surface-800);font-family:var(--font-display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-muted);padding:var(--space-2) var(--space-3)}
+.none{padding:var(--space-8);text-align:center;color:var(--ink-muted)}
+.franchise-btn{all:unset;cursor:pointer;font-weight:600;color:var(--ink);border-bottom:1px dashed var(--line-500)}
+.franchise-btn:hover{color:var(--orange-400);border-color:var(--orange-400)}
+.bar{display:inline-block;height:6px;background:var(--orange-700);vertical-align:middle;margin-left:var(--space-2)}
+.num-c{text-align:right;font-family:var(--font-mono);font-size:14px}
+th.num-c{text-align:right;font-family:var(--font-display);font-size:11px}
+.franchise-btn{white-space:nowrap}
+.foot{margin-top:var(--space-6);font-size:13px;line-height:20px;color:var(--ink-faint)}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  h1{font-size:28px;line-height:32px}
+  input.ctl{min-width:0;flex:1}
+  .count{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){.tab{transition:none}}
+</style>
+</head>
+<body class="gq-grid-bg">
+<main class="wrap">
+  <div class="gq-label">STATBATTLE // CHAMPIONS ARCHIVE</div>
+  <h1>Every Champion, 1920–2025</h1>
+  <p class="lede">Super Bowl winners, AFC and NFC champions, NFL champions before the merger, and the ten AFL champions, listed by season. Search a team to trace its history; open Title Count for franchise totals.</p>
+
+  <section class="stats" id="stats"></section>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <div class="controls">
+    <input class="ctl" id="q" type="search" placeholder="Filter by team, e.g. Steelers" aria-label="Filter by team">
+    <button class="ctl" id="sort" type="button">Newest first</button>
+    <button class="ctl" id="clear" type="button">Clear</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <section class="gq-card">
+    <div class="card-head">
+      <h2 class="card-title" id="title"></h2>
+      <p class="card-note" id="note"></p>
+    </div>
+    <div class="scroll" id="out"></div>
+  </section>
+
+  <p class="foot">Seasons are labelled by the year the season started, so Super Bowl LX (played February 2026) is the 2025 season. Team names are shown as they were at the time; title counts group them by today's franchise. NFL titles from 1920 to 1932 were decided by league standings, not a title game (1932 was settled by a tiebreaker playoff). From 1966 to 1969 the NFL and AFL champions met in the Super Bowl; after the 1970 merger those slots became the NFC and AFC champions.</p>
+</main>
+
+<script>
+// [season, winner, winnerScore, loser, loserScore, overtime]
+const SB_NUM = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","50","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX"];
+const SB = [
+[1966,"Green Bay Packers",35,"Kansas City Chiefs",10,0,"Bart Starr"],
+[1967,"Green Bay Packers",33,"Oakland Raiders",14,0,"Bart Starr"],
+[1968,"New York Jets",16,"Baltimore Colts",7,0,"Joe Namath"],
+[1969,"Kansas City Chiefs",23,"Minnesota Vikings",7,0,"Len Dawson"],
+[1970,"Baltimore Colts",16,"Dallas Cowboys",13,0,"Chuck Howley"],
+[1971,"Dallas Cowboys",24,"Miami Dolphins",3,0,"Roger Staubach"],
+[1972,"Miami Dolphins",14,"Washington",7,0,"Jake Scott"],
+[1973,"Miami Dolphins",24,"Minnesota Vikings",7,0,"Larry Csonka"],
+[1974,"Pittsburgh Steelers",16,"Minnesota Vikings",6,0,"Franco Harris"],
+[1975,"Pittsburgh Steelers",21,"Dallas Cowboys",17,0,"Lynn Swann"],
+[1976,"Oakland Raiders",32,"Minnesota Vikings",14,0,"Fred Biletnikoff"],
+[1977,"Dallas Cowboys",27,"Denver Broncos",10,0,"Harvey Martin & Randy White"],
+[1978,"Pittsburgh Steelers",35,"Dallas Cowboys",31,0,"Terry Bradshaw"],
+[1979,"Pittsburgh Steelers",31,"Los Angeles Rams",19,0,"Terry Bradshaw"],
+[1980,"Oakland Raiders",27,"Philadelphia Eagles",10,0,"Jim Plunkett"],
+[1981,"San Francisco 49ers",26,"Cincinnati Bengals",21,0,"Joe Montana"],
+[1982,"Washington",27,"Miami Dolphins",17,0,"John Riggins"],
+[1983,"Los Angeles Raiders",38,"Washington",9,0,"Marcus Allen"],
+[1984,"San Francisco 49ers",38,"Miami Dolphins",16,0,"Joe Montana"],
+[1985,"Chicago Bears",46,"New England Patriots",10,0,"Richard Dent"],
+[1986,"New York Giants",39,"Denver Broncos",20,0,"Phil Simms"],
+[1987,"Washington",42,"Denver Broncos",10,0,"Doug Williams"],
+[1988,"San Francisco 49ers",20,"Cincinnati Bengals",16,0,"Jerry Rice"],
+[1989,"San Francisco 49ers",55,"Denver Broncos",10,0,"Joe Montana"],
+[1990,"New York Giants",20,"Buffalo Bills",19,0,"Ottis Anderson"],
+[1991,"Washington",37,"Buffalo Bills",24,0,"Mark Rypien"],
+[1992,"Dallas Cowboys",52,"Buffalo Bills",17,0,"Troy Aikman"],
+[1993,"Dallas Cowboys",30,"Buffalo Bills",13,0,"Emmitt Smith"],
+[1994,"San Francisco 49ers",49,"San Diego Chargers",26,0,"Steve Young"],
+[1995,"Dallas Cowboys",27,"Pittsburgh Steelers",17,0,"Larry Brown"],
+[1996,"Green Bay Packers",35,"New England Patriots",21,0,"Desmond Howard"],
+[1997,"Denver Broncos",31,"Green Bay Packers",24,0,"Terrell Davis"],
+[1998,"Denver Broncos",34,"Atlanta Falcons",19,0,"John Elway"],
+[1999,"St. Louis Rams",23,"Tennessee Titans",16,0,"Kurt Warner"],
+[2000,"Baltimore Ravens",34,"New York Giants",7,0,"Ray Lewis"],
+[2001,"New England Patriots",20,"St. Louis Rams",17,0,"Tom Brady"],
+[2002,"Tampa Bay Buccaneers",48,"Oakland Raiders",21,0,"Dexter Jackson"],
+[2003,"New England Patriots",32,"Carolina Panthers",29,0,"Tom Brady"],
+[2004,"New England Patriots",24,"Philadelphia Eagles",21,0,"Deion Branch"],
+[2005,"Pittsburgh Steelers",21,"Seattle Seahawks",10,0,"Hines Ward"],
+[2006,"Indianapolis Colts",29,"Chicago Bears",17,0,"Peyton Manning"],
+[2007,"New York Giants",17,"New England Patriots",14,0,"Eli Manning"],
+[2008,"Pittsburgh Steelers",27,"Arizona Cardinals",23,0,"Santonio Holmes"],
+[2009,"New Orleans Saints",31,"Indianapolis Colts",17,0,"Drew Brees"],
+[2010,"Green Bay Packers",31,"Pittsburgh Steelers",25,0,"Aaron Rodgers"],
+[2011,"New York Giants",21,"New England Patriots",17,0,"Eli Manning"],
+[2012,"Baltimore Ravens",34,"San Francisco 49ers",31,0,"Joe Flacco"],
+[2013,"Seattle Seahawks",43,"Denver Broncos",8,0,"Malcolm Smith"],
+[2014,"New England Patriots",28,"Seattle Seahawks",24,0,"Tom Brady"],
+[2015,"Denver Broncos",24,"Carolina Panthers",10,0,"Von Miller"],
+[2016,"New England Patriots",34,"Atlanta Falcons",28,1,"Tom Brady"],
+[2017,"Philadelphia Eagles",41,"New England Patriots",33,0,"Nick Foles"],
+[2018,"New England Patriots",13,"Los Angeles Rams",3,0,"Julian Edelman"],
+[2019,"Kansas City Chiefs",31,"San Francisco 49ers",20,0,"Patrick Mahomes"],
+[2020,"Tampa Bay Buccaneers",31,"Kansas City Chiefs",9,0,"Tom Brady"],
+[2021,"Los Angeles Rams",23,"Cincinnati Bengals",20,0,"Cooper Kupp"],
+[2022,"Kansas City Chiefs",38,"Philadelphia Eagles",35,0,"Patrick Mahomes"],
+[2023,"Kansas City Chiefs",25,"San Francisco 49ers",22,1,"Patrick Mahomes"],
+[2024,"Philadelphia Eagles",40,"Kansas City Chiefs",22,0,"Jalen Hurts"],
+[2025,"Seattle Seahawks",29,"New England Patriots",13,0,"Kenneth Walker III"]
+];
+const AFC = [
+[1970,"Baltimore Colts",27,"Oakland Raiders",17],
+[1971,"Miami Dolphins",21,"Baltimore Colts",0],
+[1972,"Miami Dolphins",21,"Pittsburgh Steelers",17],
+[1973,"Miami Dolphins",27,"Oakland Raiders",10],
+[1974,"Pittsburgh Steelers",24,"Oakland Raiders",13],
+[1975,"Pittsburgh Steelers",16,"Oakland Raiders",10],
+[1976,"Oakland Raiders",24,"Pittsburgh Steelers",7],
+[1977,"Denver Broncos",20,"Oakland Raiders",17],
+[1978,"Pittsburgh Steelers",34,"Houston Oilers",5],
+[1979,"Pittsburgh Steelers",27,"Houston Oilers",13],
+[1980,"Oakland Raiders",34,"San Diego Chargers",27],
+[1981,"Cincinnati Bengals",27,"San Diego Chargers",7],
+[1982,"Miami Dolphins",14,"New York Jets",0],
+[1983,"Los Angeles Raiders",30,"Seattle Seahawks",14],
+[1984,"Miami Dolphins",45,"Pittsburgh Steelers",28],
+[1985,"New England Patriots",31,"Miami Dolphins",14],
+[1986,"Denver Broncos",23,"Cleveland Browns",20,1],
+[1987,"Denver Broncos",38,"Cleveland Browns",33],
+[1988,"Cincinnati Bengals",21,"Buffalo Bills",10],
+[1989,"Denver Broncos",37,"Cleveland Browns",21],
+[1990,"Buffalo Bills",51,"Los Angeles Raiders",3],
+[1991,"Buffalo Bills",10,"Denver Broncos",7],
+[1992,"Buffalo Bills",29,"Miami Dolphins",10],
+[1993,"Buffalo Bills",30,"Kansas City Chiefs",13],
+[1994,"San Diego Chargers",17,"Pittsburgh Steelers",13],
+[1995,"Pittsburgh Steelers",20,"Indianapolis Colts",16],
+[1996,"New England Patriots",20,"Jacksonville Jaguars",6],
+[1997,"Denver Broncos",24,"Pittsburgh Steelers",21],
+[1998,"Denver Broncos",23,"New York Jets",10],
+[1999,"Tennessee Titans",33,"Jacksonville Jaguars",14],
+[2000,"Baltimore Ravens",16,"Oakland Raiders",3],
+[2001,"New England Patriots",24,"Pittsburgh Steelers",17],
+[2002,"Oakland Raiders",41,"Tennessee Titans",24],
+[2003,"New England Patriots",24,"Indianapolis Colts",14],
+[2004,"New England Patriots",41,"Pittsburgh Steelers",27],
+[2005,"Pittsburgh Steelers",34,"Denver Broncos",17],
+[2006,"Indianapolis Colts",38,"New England Patriots",34],
+[2007,"New England Patriots",21,"San Diego Chargers",12],
+[2008,"Pittsburgh Steelers",23,"Baltimore Ravens",14],
+[2009,"Indianapolis Colts",30,"New York Jets",17],
+[2010,"Pittsburgh Steelers",24,"New York Jets",19],
+[2011,"New England Patriots",23,"Baltimore Ravens",20],
+[2012,"Baltimore Ravens",28,"New England Patriots",13],
+[2013,"Denver Broncos",26,"New England Patriots",16],
+[2014,"New England Patriots",45,"Indianapolis Colts",7],
+[2015,"Denver Broncos",20,"New England Patriots",18],
+[2016,"New England Patriots",36,"Pittsburgh Steelers",17],
+[2017,"New England Patriots",24,"Jacksonville Jaguars",20],
+[2018,"New England Patriots",37,"Kansas City Chiefs",31,1],
+[2019,"Kansas City Chiefs",35,"Tennessee Titans",24],
+[2020,"Kansas City Chiefs",38,"Buffalo Bills",24],
+[2021,"Cincinnati Bengals",27,"Kansas City Chiefs",24,1],
+[2022,"Kansas City Chiefs",23,"Cincinnati Bengals",20],
+[2023,"Kansas City Chiefs",17,"Baltimore Ravens",10],
+[2024,"Kansas City Chiefs",32,"Buffalo Bills",29],
+[2025,"New England Patriots",10,"Denver Broncos",7]
+];
+const NFC = [
+[1970,"Dallas Cowboys",17,"San Francisco 49ers",10],
+[1971,"Dallas Cowboys",14,"San Francisco 49ers",3],
+[1972,"Washington",26,"Dallas Cowboys",3],
+[1973,"Minnesota Vikings",27,"Dallas Cowboys",10],
+[1974,"Minnesota Vikings",14,"Los Angeles Rams",10],
+[1975,"Dallas Cowboys",37,"Los Angeles Rams",7],
+[1976,"Minnesota Vikings",24,"Los Angeles Rams",13],
+[1977,"Dallas Cowboys",23,"Minnesota Vikings",6],
+[1978,"Dallas Cowboys",28,"Los Angeles Rams",0],
+[1979,"Los Angeles Rams",9,"Tampa Bay Buccaneers",0],
+[1980,"Philadelphia Eagles",20,"Dallas Cowboys",7],
+[1981,"San Francisco 49ers",28,"Dallas Cowboys",27],
+[1982,"Washington",31,"Dallas Cowboys",17],
+[1983,"Washington",24,"San Francisco 49ers",21],
+[1984,"San Francisco 49ers",23,"Chicago Bears",0],
+[1985,"Chicago Bears",24,"Los Angeles Rams",0],
+[1986,"New York Giants",17,"Washington",0],
+[1987,"Washington",17,"Minnesota Vikings",10],
+[1988,"San Francisco 49ers",28,"Chicago Bears",3],
+[1989,"San Francisco 49ers",30,"Los Angeles Rams",3],
+[1990,"New York Giants",15,"San Francisco 49ers",13],
+[1991,"Washington",41,"Detroit Lions",10],
+[1992,"Dallas Cowboys",30,"San Francisco 49ers",20],
+[1993,"Dallas Cowboys",38,"San Francisco 49ers",21],
+[1994,"San Francisco 49ers",38,"Dallas Cowboys",28],
+[1995,"Dallas Cowboys",38,"Green Bay Packers",27],
+[1996,"Green Bay Packers",30,"Carolina Panthers",13],
+[1997,"Green Bay Packers",23,"San Francisco 49ers",10],
+[1998,"Atlanta Falcons",30,"Minnesota Vikings",27,1],
+[1999,"St. Louis Rams",11,"Tampa Bay Buccaneers",6],
+[2000,"New York Giants",41,"Minnesota Vikings",0],
+[2001,"St. Louis Rams",29,"Philadelphia Eagles",24],
+[2002,"Tampa Bay Buccaneers",27,"Philadelphia Eagles",10],
+[2003,"Carolina Panthers",14,"Philadelphia Eagles",3],
+[2004,"Philadelphia Eagles",27,"Atlanta Falcons",10],
+[2005,"Seattle Seahawks",34,"Carolina Panthers",14],
+[2006,"Chicago Bears",39,"New Orleans Saints",14],
+[2007,"New York Giants",23,"Green Bay Packers",20,1],
+[2008,"Arizona Cardinals",32,"Philadelphia Eagles",25],
+[2009,"New Orleans Saints",31,"Minnesota Vikings",28,1],
+[2010,"Green Bay Packers",21,"Chicago Bears",14],
+[2011,"New York Giants",20,"San Francisco 49ers",17,1],
+[2012,"San Francisco 49ers",28,"Atlanta Falcons",24],
+[2013,"Seattle Seahawks",23,"San Francisco 49ers",17],
+[2014,"Seattle Seahawks",28,"Green Bay Packers",22,1],
+[2015,"Carolina Panthers",49,"Arizona Cardinals",15],
+[2016,"Atlanta Falcons",44,"Green Bay Packers",21],
+[2017,"Philadelphia Eagles",38,"Minnesota Vikings",7],
+[2018,"Los Angeles Rams",26,"New Orleans Saints",23,1],
+[2019,"San Francisco 49ers",37,"Green Bay Packers",20],
+[2020,"Tampa Bay Buccaneers",31,"Green Bay Packers",26],
+[2021,"Los Angeles Rams",20,"San Francisco 49ers",17],
+[2022,"Philadelphia Eagles",31,"San Francisco 49ers",7],
+[2023,"San Francisco 49ers",34,"Detroit Lions",31],
+[2024,"Philadelphia Eagles",55,"Washington",23],
+[2025,"Seattle Seahawks",31,"Los Angeles Rams",27]
+];
+// NFL champions before the merger. null loser = decided by standings.
+const NFL = [
+[1920,"Akron Pros"],[1921,"Chicago Staleys"],[1922,"Canton Bulldogs"],[1923,"Canton Bulldogs"],
+[1924,"Cleveland Bulldogs"],[1925,"Chicago Cardinals"],[1926,"Frankford Yellow Jackets"],[1927,"New York Giants"],
+[1928,"Providence Steam Roller"],[1929,"Green Bay Packers"],[1930,"Green Bay Packers"],[1931,"Green Bay Packers"],
+[1932,"Chicago Bears",9,"Portsmouth Spartans",0,0,"playoff"],
+[1933,"Chicago Bears",23,"New York Giants",21],
+[1934,"New York Giants",30,"Chicago Bears",13],
+[1935,"Detroit Lions",26,"New York Giants",7],
+[1936,"Green Bay Packers",21,"Boston Redskins",6],
+[1937,"Washington",28,"Chicago Bears",21],
+[1938,"New York Giants",23,"Green Bay Packers",17],
+[1939,"Green Bay Packers",27,"New York Giants",0],
+[1940,"Chicago Bears",73,"Washington",0],
+[1941,"Chicago Bears",37,"New York Giants",9],
+[1942,"Washington",14,"Chicago Bears",6],
+[1943,"Chicago Bears",41,"Washington",21],
+[1944,"Green Bay Packers",14,"New York Giants",7],
+[1945,"Cleveland Rams",15,"Washington",14],
+[1946,"Chicago Bears",24,"New York Giants",14],
+[1947,"Chicago Cardinals",28,"Philadelphia Eagles",21],
+[1948,"Philadelphia Eagles",7,"Chicago Cardinals",0],
+[1949,"Philadelphia Eagles",14,"Los Angeles Rams",0],
+[1950,"Cleveland Browns",30,"Los Angeles Rams",28],
+[1951,"Los Angeles Rams",24,"Cleveland Browns",17],
+[1952,"Detroit Lions",17,"Cleveland Browns",7],
+[1953,"Detroit Lions",17,"Cleveland Browns",16],
+[1954,"Cleveland Browns",56,"Detroit Lions",10],
+[1955,"Cleveland Browns",38,"Los Angeles Rams",14],
+[1956,"New York Giants",47,"Chicago Bears",7],
+[1957,"Detroit Lions",59,"Cleveland Browns",14],
+[1958,"Baltimore Colts",23,"New York Giants",17,1],
+[1959,"Baltimore Colts",31,"New York Giants",16],
+[1960,"Philadelphia Eagles",17,"Green Bay Packers",13],
+[1961,"Green Bay Packers",37,"New York Giants",0],
+[1962,"Green Bay Packers",16,"New York Giants",7],
+[1963,"Chicago Bears",14,"New York Giants",10],
+[1964,"Cleveland Browns",27,"Baltimore Colts",0],
+[1965,"Green Bay Packers",23,"Cleveland Browns",12],
+[1966,"Green Bay Packers",34,"Dallas Cowboys",27],
+[1967,"Green Bay Packers",21,"Dallas Cowboys",17],
+[1968,"Baltimore Colts",34,"Cleveland Browns",0],
+[1969,"Minnesota Vikings",27,"Cleveland Browns",7]
+];
+const AFL = [
+[1960,"Houston Oilers",24,"Los Angeles Chargers",16],
+[1961,"Houston Oilers",10,"San Diego Chargers",3],
+[1962,"Dallas Texans",20,"Houston Oilers",17,2],
+[1963,"San Diego Chargers",51,"Boston Patriots",10],
+[1964,"Buffalo Bills",20,"San Diego Chargers",7],
+[1965,"Buffalo Bills",23,"San Diego Chargers",0],
+[1966,"Kansas City Chiefs",31,"Buffalo Bills",7],
+[1967,"Oakland Raiders",40,"Houston Oilers",7],
+[1968,"New York Jets",27,"Oakland Raiders",23],
+[1969,"Kansas City Chiefs",17,"Oakland Raiders",7]
+];
+
+// Historical name -> today's franchise
+const FR = [
+ [/Staleys|Bears/,"Chicago Bears"],[/Packers/,"Green Bay Packers"],[/Giants/,"New York Giants"],[/Lions|Spartans/,"Detroit Lions"],
+ [/Washington|Redskins/,"Washington Commanders"],[/Eagles/,"Philadelphia Eagles"],[/Rams/,"Los Angeles Rams"],[/Browns/,"Cleveland Browns"],
+ [/Colts/,"Indianapolis Colts"],[/Vikings/,"Minnesota Vikings"],[/Cardinals/,"Arizona Cardinals"],[/Cowboys/,"Dallas Cowboys"],
+ [/49ers/,"San Francisco 49ers"],[/Steelers/,"Pittsburgh Steelers"],[/Dolphins/,"Miami Dolphins"],[/Raiders/,"Las Vegas Raiders"],
+ [/Chiefs|Texans/,"Kansas City Chiefs"],[/Jets/,"New York Jets"],[/Bills/,"Buffalo Bills"],[/Chargers/,"Los Angeles Chargers"],
+ [/Oilers|Titans/,"Tennessee Titans"],[/Patriots/,"New England Patriots"],[/Broncos/,"Denver Broncos"],[/Bengals/,"Cincinnati Bengals"],
+ [/Seahawks/,"Seattle Seahawks"],[/Buccaneers/,"Tampa Bay Buccaneers"],[/Falcons/,"Atlanta Falcons"],[/Saints/,"New Orleans Saints"],
+ [/Panthers/,"Carolina Panthers"],[/Jaguars/,"Jacksonville Jaguars"],[/Ravens/,"Baltimore Ravens"]
+];
+const fr = n => { for (const [re,f] of FR) if (re.test(n)) return f; return n; };
+
+const toObj = (r,extra={}) => ({season:r[0], w:r[1], ws:r[2], l:r[3], ls:r[4], ot:r[5]||0, ...extra});
+const D = {
+  sb: SB.map((r,i)=>toObj(r,{num:SB_NUM[i], mvp:r[6]})),
+  afc: AFC.map(r=>toObj(r)),
+  nfc: NFC.map(r=>toObj(r)),
+  nfl: NFL.map(r=>toObj(r,{note:r[6]||(r.length===2?"standings":"")})),
+  afl: AFL.map(r=>toObj(r))
+};
+const by = k => Object.fromEntries(D[k].map(g=>[g.season,g]));
+const IDX = {sb:by("sb"),afc:by("afc"),nfc:by("nfc"),nfl:by("nfl"),afl:by("afl")};
+
+const TABS = [
+ {id:"all", label:"All seasons", title:"Year by year", note:"106 seasons · every title in one view"},
+ {id:"sb", label:"Super Bowl", title:"Super Bowl champions", note:"60 games · 1966 season to 2025"},
+ {id:"afc", label:"AFC", title:"AFC champions", note:"AFC Championship Game · 1970 to 2025"},
+ {id:"nfc", label:"NFC", title:"NFC champions", note:"NFC Championship Game · 1970 to 2025"},
+ {id:"nfl", label:"NFL 1920–69", title:"NFL champions before the merger", note:"1920–1932 by standings · title game from 1933"},
+ {id:"afl", label:"AFL 1960–69", title:"AFL champions", note:"AFL Championship Game · ten seasons"},
+ {id:"count", label:"Title count", title:"Titles by franchise", note:"Grouped by today's franchise"}
+];
+
+let state = {tab:"all", q:"", desc:true};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function matches(name){
+  if(!state.q) return false;
+  const q = state.q.toLowerCase();
+  return name.toLowerCase().includes(q) || fr(name).toLowerCase().includes(q);
+}
+function team(name, cls){
+  return `<span class="${cls}${matches(name)?" hit":""}">${esc(name)}</span>`;
+}
+function otTag(g){ return g.ot ? `<span class="tag ot">${g.ot===2?"2OT":"OT"}</span>` : ""; }
+function score(g){ return g.ws==null ? "" : `${g.ws}–${g.ls}`; }
+function gameHit(g){ return !state.q || matches(g.w) || (g.l && matches(g.l)); }
+
+function render(){
+  const t = TABS.find(x=>x.id===state.tab);
+  $("title").textContent = t.title;
+  $("note").textContent = t.note;
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", b.dataset.id===state.tab));
+  $("sort").textContent = state.desc ? "Newest first" : "Oldest first";
+  $("sort").style.display = state.tab==="count" ? "none" : "";
+  let html="", n=0, total=0;
+
+  if(state.tab==="all"){
+    const rows=[];
+    let lastEra=null;
+    const seasons=[]; for(let y=1920;y<=2025;y++) seasons.push(y);
+    if(state.desc) seasons.reverse();
+    for(const y of seasons){
+      const nfl=IDX.nfl[y], nfc=IDX.nfc[y], afl=IDX.afl[y], afc=IDX.afc[y], sb=IDX.sb[y];
+      const games=[nfl,nfc,afl,afc,sb].filter(Boolean);
+      total++;
+      if(state.q && !games.some(g=>matches(g.w)||(g.l&&matches(g.l)))) continue;
+      n++;
+      const era = y>=1970?"Super Bowl era · AFC vs NFC":y>=1966?"Super Bowl era · AFL vs NFL":y>=1960?"Two leagues · NFL and AFL":y>=1933?"NFL Championship Game":"NFL · champion by standings";
+      if(era!==lastEra && !state.q){ rows.push(`<tr class="era"><td colspan="4">${era}</td></tr>`); lastEra=era; }
+      const left = nfc||nfl, right = afc||afl;
+      const cell = (g,leagueTitle)=>{
+        if(!g) return `<td class="empty">—</td>`;
+        let s = team(g.w,"win");
+        if(leagueTitle) s += `<span class="tag">League title</span>`;
+        if(g.l) s += `<span class="small">def. ${team(g.l,"")} <span class="mono">${score(g)}</span>${otTag(g)}${g.note==="playoff"?" · tiebreaker playoff":""}</span>`;
+        else s += `<span class="small">by league standings</span>`;
+        return `<td>${s}</td>`;
+      };
+      const pre = y<1966;
+      const sbCell = sb ? `<td><span class="sb">SB ${sb.num}</span>${team(sb.w,"win")}<span class="small">def. ${team(sb.l,"")} <span class="mono">${score(sb)}</span>${otTag(sb)}</span></td>` : `<td class="empty">—</td>`;
+      rows.push(`<tr><td class="yr">${y}</td>${cell(left,pre && left===nfl)}${cell(right,false)}${sbCell}</tr>`);
+    }
+    html = `<table style="table-layout:fixed"><colgroup><col style="width:90px"><col><col><col></colgroup><thead><tr><th>Season</th><th>NFL / NFC champion</th><th>AFL / AFC champion</th><th>Super Bowl</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  }
+  else if(state.tab==="count"){
+    const T={};
+    const add=(name,key)=>{const f=fr(name); (T[f]=T[f]||{f,sb:0,sbApp:0,nfl:0,afl:0,conf:0,league:0}); T[f][key]++;};
+    D.sb.forEach(g=>{add(g.w,"sb");add(g.w,"sbApp");add(g.l,"sbApp");add(g.w,"league");});
+    D.nfl.forEach(g=>{ if(g.season<1966){add(g.w,"nfl");add(g.w,"league");} });
+    D.afl.forEach(g=>add(g.w,"afl"));
+    D.afc.forEach(g=>add(g.w,"conf")); D.nfc.forEach(g=>add(g.w,"conf"));
+    let list=Object.values(T).sort((a,b)=>b.league-a.league||b.sb-a.sb||b.conf-a.conf||a.f.localeCompare(b.f));
+    total=list.length;
+    if(state.q) list=list.filter(r=>r.f.toLowerCase().includes(state.q.toLowerCase()));
+    n=list.length;
+    const max=Math.max(...Object.values(T).map(r=>r.league));
+    html = `<table><thead><tr><th>Franchise</th><th class="num-c">League titles</th><th class="num-c">Super Bowl wins</th><th class="num-c">SB apps</th><th class="num-c">NFL titles pre-1966</th><th class="num-c">AFL titles</th><th class="num-c">AFC / NFC titles</th></tr></thead><tbody>`+
+      list.map(r=>`<tr><td><button class="franchise-btn" data-f="${esc(r.f)}">${esc(r.f)}</button></td>
+        <td class="num-c">${r.league}<span class="bar" style="width:${Math.round(r.league/max*60)}px"></span></td>
+        <td class="num-c">${r.sb||"·"}</td><td class="num-c">${r.sbApp||"·"}</td><td class="num-c">${r.nfl||"·"}</td><td class="num-c">${r.afl||"·"}</td><td class="num-c">${r.conf||"·"}</td></tr>`).join("")+
+      `</tbody></table>`;
+  }
+  else {
+    let games=[...D[state.tab]]; total=games.length;
+    if(state.desc) games.reverse();
+    games=games.filter(gameHit); n=games.length;
+    const isSB=state.tab==="sb";
+    html = `<table><thead><tr><th>Season</th>${isSB?"<th>Game</th>":""}<th>Champion</th><th>Score</th><th>Runner-up</th>${isSB?"<th>MVP</th>":""}</tr></thead><tbody>`+
+      games.map(g=>`<tr><td class="yr">${g.season}</td>${isSB?`<td class="mono">${g.num}</td>`:""}
+        <td>${team(g.w,"win")}</td>
+        <td class="mono">${g.l?score(g):'<span class="lose">—</span>'}${otTag(g)}</td>
+        <td>${g.l?team(g.l,"lose")+(g.note==="playoff"?'<span class="small">Tiebreaker playoff</span>':""):'<span class="lose">Decided by league standings</span>'}</td>
+        ${isSB?`<td class="lose">${esc(g.mvp)}</td>`:""}</tr>`).join("")+
+      `</tbody></table>`;
+  }
+  if(n===0) html=`<div class="none">No titles found for “${esc(state.q)}”. Try a nickname such as Raiders or Colts.</div>`;
+  $("out").innerHTML = html;
+  const unit = state.tab==="all"?"seasons":state.tab==="count"?"franchises":"games";
+  $("count").textContent = state.q ? `${String(n).padStart(2,"0")} / ${total} ${unit}` : `${total} ${unit}`;
+  document.querySelectorAll(".franchise-btn").forEach(b=>b.onclick=()=>{ $("q").value=b.dataset.f.split(" ").slice(-1)[0]; state.q=$("q").value; state.tab="all"; render(); });
+}
+
+function stats(){
+  const c={}; D.sb.forEach(g=>{const f=fr(g.w); c[f]=(c[f]||0)+1;});
+  const top=Math.max(...Object.values(c)); const leaders=Object.keys(c).filter(k=>c[k]===top);
+  const last=D.sb[D.sb.length-1];
+  const items=[
+    ["Reigning champion", last.w.split(" ").slice(-1)[0], `SB ${last.num} · ${last.ws}–${last.ls} over ${last.l}`],
+    ["Most Super Bowls", String(top), leaders.map(x=>x.split(" ").slice(-1)[0]).join(" & ")],
+    ["Super Bowls played", String(D.sb.length), "1966 season through 2025"],
+    ["Different SB winners", String(Object.keys(c).length), "franchises with at least one"]
+  ];
+  $("stats").innerHTML=items.map(([l,v,s])=>`<div class="stat"><div class="gq-label">${l}</div><div class="num">${esc(v)}</div><div class="sub">${esc(s)}</div></div>`).join("");
+}
+
+$("tabs").innerHTML = TABS.map(t=>`<button class="tab" role="tab" data-id="${t.id}">${t.label}</button>`).join("");
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b){state.tab=b.dataset.id; render();}});
+$("q").addEventListener("input",e=>{state.q=e.target.value.trim(); render();});
+$("sort").addEventListener("click",()=>{state.desc=!state.desc; render();});
+$("clear").addEventListener("click",()=>{$("q").value=""; state.q=""; render();});
+stats(); render();
+</script>
+</body>
+</html>
